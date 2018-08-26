@@ -14,7 +14,7 @@ import {
   index_by,
   group_by,
   last
-} from './fx.js';
+} from 'fxjs2';
 import { Pool } from 'pg';
 
 const SymbolColumn = Symbol('COLUMN');
