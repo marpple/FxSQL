@@ -1,0 +1,23 @@
+{
+  "name": "mql2",
+  "version": "0.0.1",
+  "description": "query builder",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marpple/MQL.git"
+  },
+  "author": "marpple",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/marpple/MQL/issues"
+  },
+  "homepage": "https://github.com/marpple/MQL",
+  "dependencies": {
+    "esm": "^3.0.80",
+    "pg": "^7.4.3"
+  }
+}
