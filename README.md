@@ -3,7 +3,7 @@
 마플에서 사용하는 PostgreSQL 쿼리 빌더
 
 ## 특징
- - 지원하는 tags를 통해 INSERT, UPDATE, WHERE 절 등에 필요한 복잡한 쿼리를 자바스크립트 Object를 통해 쉽게 생성할 수 있습니다.
+ - tags를 통해 INSERT, UPDATE, WHERE 절 등에 필요한 복잡한 쿼리를 자바스크립트 객체를 통해 쉽게 생성할 수 있습니다.
  - 일반적인 SQL 문법을 유지할 수 있습니다.
  - SQL을 세밀하게 튜닝할 수 있습니다.
  - SQL Injection이 불가능합니다.
