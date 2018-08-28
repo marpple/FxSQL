@@ -127,6 +127,12 @@ posts[0]._.comments[0]._.user.name // 댓글 작성자 이름
 ### Polymorphic
 
 ```javascript
+/*
+* photos
+*  - attached_type
+*  - attached_id
+* */
+
 await ASSOCIATE `
   posts
     - user
@@ -142,7 +148,7 @@ await ASSOCIATE `
 
 ### Many-to-many
 
-```
+```javascript
 /*
 * books
 *  - id
