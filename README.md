@@ -8,7 +8,7 @@
  - SQL Injection이 불가능합니다.
  - Associations을 위해 모델을 미리 구성해둘 필요가 없습니다.
  - Transaction을 사용하기 쉽습니다.
- - 결과 값이 json으로 변환할 수 있는 자바스크립트의 기본 값으로만(object, array, string, number, true, false, null) 구성되어있어 조합성이 높고 JSON 문자열로 변환하는 비용이 적습니다.
+ - 결과 값을 자바스크립트의 기본 값으로만(object, array, string, number, true, false, null) 구성하여, 조합성이 높고 JSON 문자열로 변환하는 비용이 적습니다.
 
 ## 설치
 
