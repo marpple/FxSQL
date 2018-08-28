@@ -269,7 +269,7 @@ function baseAssociate(QUERY) {
           }
 
           if (me.rel_type == 'x') {
-            var table2 = left.table + '_' + me.table;
+            var table2 = me.xtable || (left.table + '_' + me.table);
             me.join = SQL `INNER JOIN ${TB(table2)} on ${EQ({
               [table2 + '.' + me.table.substr(0, me.table.length-1) + '_id']: COLUMN(me.table + '.id')  
             })}`;

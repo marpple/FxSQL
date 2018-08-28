@@ -167,7 +167,14 @@ const books = await ASSOCIATE `
     x authors
 `;
 
-books[0]._.authors.name; // 이름
+books[0]._.authors[0].name; // 이름
+
+const authors = await ASSOCIATE `
+  authors
+    x books ${{ xtable: 'books_authors' }}
+`;
+
+authors[0]._.books[0].name; // 책 이름
 ```
 
 ### 옵션
