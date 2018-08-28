@@ -60,7 +60,7 @@ const users = await QUERY `SELECT * FROM users WHERE ${IN('id', [15, 19, 20, 40]
 ### NOT_IN
 
 ```javascript
-const users2 = await QUERY `SELECT * FROM users WHERE ${NOT_IN('id', [2, 4])}` LIMIT 3 ORDER BY ID;
+const users = await QUERY `SELECT * FROM users WHERE ${NOT_IN('id', [2, 4])}` LIMIT 3 ORDER BY ID;
 // [{ id: 1, ...}, { id: 3, ...}, { id: 5, ...}]
 ```
 
