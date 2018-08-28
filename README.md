@@ -1,6 +1,6 @@
 # MQL
 
-마플에서 사용하는 PostgreSQL 쿼리 빌더
+마플에서 사용하는 PostgreSQL 쿼리 빌
 
 ## 특징
  - INSERT, UPDATE, WHERE 절 등에 필요한 복잡한 쿼리를 자바스크립트 객체를 통해 쉽게 생성할 수 있습니다.
@@ -124,6 +124,46 @@ posts[0]._.comments[0].body // 코멘트 내용
 posts[0]._.comments[0]._.user.name // 댓글 작성자 이름
 ```
 
+### Polymorphic
+
+```javascript
+await ASSOCIATE `
+  posts
+    - user
+      p - photo
+    p < photos
+    < comments
+      p < photos
+`;
+// SELECT * FROM photos WHERE attached_id IN (${map($ => $.id, posts)}) attached_type = 'photos'
+// SELECT * FROM photos WHERE attached_id IN (${map($ => $.id, users)}) attached_type = 'users'
+// SELECT * FROM photos WHERE attached_id IN (${map($ => $.id, comments)}) attached_type = 'comments'
+```
+
+### Many-to-many
+
+```
+/*
+* books
+*  - id
+*
+* authors
+*  - id
+*  - name
+*
+* books_authors
+*  - author_id
+*  - book_id
+* */
+
+const books = await ASSOCIATE `
+  books
+    x authors
+`;
+
+books[0]._.authors.name; // 이름
+```
+
 ### 옵션
 
 ```javascript
@@ -138,6 +178,7 @@ const posts = await ASSOCIATE `
       - user
 `;
 ```
+
 
 ## Transaction
 
