@@ -344,7 +344,7 @@ export async function CONNECT(connection) {
       replace_qq,
       query => is_injection(query) ? Promise.reject('INJECTION ERROR') : query,
       tap(function(query) {
-        if (GLOBAL.MQL_DEBUG) console.log(query);
+        if (global.MQL_DEBUG) console.log(query);
       }),
       excute_query,
       res => res.rows);
