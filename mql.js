@@ -4,6 +4,7 @@ import {
   flatten,
   flatten as cat,
   reduce,
+  tap,
   go,
   map,
   filter,
@@ -129,7 +130,7 @@ export function COLUMN(...originals) {
   }), { [SymbolColumn]: true, originals: originals });
 }
 
-export const COL = COLUMN,
+export const CL = COLUMN,
   TABLE = COLUMN,
   TB = TABLE;
 
@@ -337,12 +338,15 @@ export async function CONNECT(connection) {
   const pool = new Pool(connection);
   const pool_query = pool.query.bind(pool);
 
-  function base_query(query, texts, values) {
+  function base_query(excute_query, texts, values) {
     return go(
       _SQL(texts, values),
       replace_qq,
       query => is_injection(query) ? Promise.reject('INJECTION ERROR') : query,
-      pool_query,
+      tap(function(query) {
+        if (GLOBAL.MQL_DEBUG) console.log(query);
+      }),
+      excute_query,
       res => res.rows);
   }
 
@@ -357,7 +361,7 @@ export async function CONNECT(connection) {
     EQ,
     SET,
     COLUMN,
-    COL,
+    CL,
     TABLE,
     TB,
     SQL,

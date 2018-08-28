@@ -1,6 +1,6 @@
 {
   "name": "mql2",
-  "version": "0.0.2",
+  "version": "0.0.6",
   "description": "query builder",
   "main": "index.js",
   "scripts": {
@@ -18,7 +18,7 @@
   "homepage": "https://github.com/marpple/MQL",
   "dependencies": {
     "esm": "^3.0.80",
-    "fxjs2": "0.0.2",
+    "fxjs2": "0.0.4",
     "pg": "^7.4.3"
   }
 }
