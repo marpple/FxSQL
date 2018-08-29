@@ -1,6 +1,6 @@
 # MQL
 
-마플에서 사용하는 PostgreSQL 쿼리 빌
+마플에서 사용하는 PostgreSQL 쿼리 빌더
 
 ## 특징
  - INSERT, UPDATE, WHERE 절 등에 필요한 복잡한 쿼리를 자바스크립트 객체를 통해 쉽게 생성할 수 있습니다.
