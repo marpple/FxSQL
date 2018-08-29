@@ -17,7 +17,9 @@ import {
   last
 } from 'fxjs2';
 import { Pool } from 'pg';
-
+import { dump as DUMP } from 'dumper.js';
+function dump(){}dump = DUMP;
+const table_columns = {};
 const SymbolColumn = Symbol('COLUMN');
 const SymbolTag = Symbol('TAG');
 const SymbolInjection = Symbol('INJECTION');
@@ -30,6 +32,10 @@ const mix = (arr1, arr2) => arr1.reduce((res, item, i) => {
   return res;
 }, []);
 
+const initial = function (ary, n, guard) {
+  return Array.prototype.slice.call(ary, 0, Math.max(0, ary.length - (n == null || guard ? 1 : n)));
+};
+
 const add_column = me =>
   me.column == '*' ?
     COLUMN(me.table + '.*') :
@@ -38,6 +44,14 @@ const add_column = me =>
       map(c => me.table + '.' + c),
       uniq));
 
+const add_as_join = (me, as) =>
+  COLUMN(...go(
+      me.column.originals.concat(pluck('left_key', me.outer_joins)),
+      map(c => me.as + '.' + c + ' AS ' + `${as}>_<${c}`),
+      uniq
+    ));
+
+
 const to_qq = () => '??';
 const escape_dq = value => ('' + value).replace(/\\/g, "\\\\").replace(/"/g, '""');
 const dq = str => str.split('.').map(s => s == '*' ? s : `"${escape_dq(s)}"`).join(".");
@@ -45,12 +59,57 @@ const columnize = v =>
   v == '*' ?
     '*' :
     v.match(/\s*\sas\s\s*/i) ?
-      v.split(/\s*as\s*/i).map(dq).join(' AS ') :
+      v.split(/\s*\sas\s\s*/i).map(dq).join(' AS ') :
       dq(v);
 
 const is_column = f => f && f[SymbolColumn];
 const is_tag = f => f && f[SymbolTag];
 const is_injection = query => query == SymbolInjection;
+
+function ready_sqls(strs, tails) {
+  const options = strs
+      .map(s => s
+        .replace(/\s*\n/, '')
+        .split('\n')
+        .map((s) => {
+          var depth = s.match(/^\s*/)[0].length,
+            as = s.trim(),
+            rel_type;
+
+          var prefix = as.substr(0, 2);
+          if (['- ', '< ', 'x '].includes(prefix)) {
+            rel_type = prefix.trim();
+            as = as.substr(1).trim();
+            return { depth, as, rel_type }
+          } else if (prefix == 'p ') {
+            rel_type = as[3];
+            as = as.substr(3).trim();
+            return { depth, as, rel_type, is_poly: true }
+          } else {
+            return { depth, as };
+          }
+        })
+      );
+
+    go(
+      tails,
+      map(tail =>
+        is_string(tail) ?
+          { query: tag({ text: tail }) } :
+          is_function(tail) ?
+            { query: tail } :
+            Object.assign(tail, { query: tail.query || tag({ text: '' }) })
+      ),
+      Object.entries,
+      each(([i, t]) => go(
+        options[i],
+        last,
+        _ => Object.assign(_, t)
+      ))
+    );
+
+    return options;
+}
 
 function replace_qq(query) {
   if (is_injection(query)) return SymbolInjection;
@@ -121,10 +180,10 @@ export function COLUMN(...originals) {
           is_string(v) ?
             columnize(v)
           :
-          Object
-            .entries(v)
-            .map(v => v.map(dq).join(' AS '))
-            .join(', '))
+            Object
+              .entries(v)
+              .map(v => v.map(dq).join(' AS '))
+              .join(', '))
         .join(', ')
     };
   }), { [SymbolColumn]: true, originals: originals });
@@ -203,49 +262,8 @@ export function SQL(texts, ...values) {
 
 function baseAssociate(QUERY) {
   return async function(strs, ...tails) {
-    const options = strs
-      .map(s => s
-        .replace(/\s*\n/, '')
-        .split('\n')
-        .map((s) => {
-          var depth = s.match(/^\s*/)[0].length,
-            as = s.trim(),
-            rel_type;
-
-          var prefix = as.substr(0, 2);
-          if (['- ', '< ', 'x '].includes(prefix)) {
-            rel_type = prefix.trim();
-            as = as.substr(1).trim();
-            return { depth, as, rel_type }
-          } else if (prefix == 'p ') {
-            rel_type = as[3];
-            as = as.substr(3).trim();
-            return { depth, as, rel_type, is_poly: true }
-          } else {
-            return { depth, as };
-          }
-        })
-      );
-
-    go(
-      tails,
-      map(tail =>
-        is_string(tail) ?
-          { query: tag({ text: tail }) } :
-          is_function(tail) ?
-            { query: tail } :
-            Object.assign(tail, { query: tail.query || tag({ text: '' }) })
-      ),
-      Object.entries,
-      each(([i, t]) => go(
-        options[i],
-        last,
-        _ => Object.assign(_, t)
-      ))
-    );
-
     return go(
-      options,
+      ready_sqls(strs, tails),
       cat,
       filter(t => t.as),
       each(option => {
@@ -334,6 +352,113 @@ function baseAssociate(QUERY) {
   }
 }
 
+function ljoin(QUERY) {
+  return async function(strs, ...tails) {
+    return go(
+      ready_sqls(strs, tails),
+      cat,
+      filter(t => t.as),
+      each(option => {
+        option.query = option.query || tag();
+        option.table = option.table || (option.rel_type == '-' ? option.as + 's' : option.as);
+        option.column = option.column || CL(...table_columns[option.table]);
+        option.outer_joins = [];
+        option.rels = [];
+      }),
+      function setting([left, ...rest]) {
+        const cur = [left];
+        each(me => {
+          while (!(last(cur).depth < me.depth)) cur.pop();
+          const left = last(cur);
+           if (me.rel_type == '-') {
+            me.left_key = me.left_key || (me.is_poly ? 'id' : me.table.substr(0, me.table.length-1) + '_id');
+            me.key = me.key || (me.is_poly ? 'attached_id' : 'id');
+            left.outer_joins.push(me);
+          } else {
+            me.left_key = me.left_key || 'id';
+            me.key = me.key || (me.is_poly ? 'attached_id' : left.table.substr(0, left.table.length-1) + '_id');
+            left.rels.push(me);
+            // if (me.rel_type == 'x') {
+            //   var table2 = me.xtable || (left.table + '_' + me.table);
+            //   me.join = SQL `INNER JOIN ${TB(table2)} on ${EQ({
+            //     [table2 + '.' + me.table.substr(0, me.table.length-1) + '_id']: COLUMN(me.table + '.id')
+            //   })}`;
+            //   me.key = table2 + '.' + me.key;
+            // } else {
+            //   me.join = tag();
+            // }
+          }
+          cur.push(me);
+        }, rest);
+        return left;
+      },
+      async function(me) {
+        return left_outer_join_sql(me, null, QUERY);
+      }
+    );
+  };
+
+}
+
+function make_join_group(join_group, outer_joins) {
+  return each(join_right => {
+    // console.log(add_as_join(join_right)())
+    join_group.push(join_right);
+    make_join_group(join_group, join_right.outer_joins);
+  }, outer_joins)
+}
+
+function left_outer_join_sql(left, where_in_query, QUERY) {
+  const join_columns = [];
+  const join_sqls = [];
+  join_columns.push(add_as_join(left, left.as).originals);
+  return go(
+    left,
+    function recur(me, parent_as) {
+      parent_as = parent_as || me.as;
+      each(right => {
+        const query = right.query();
+        if (query && query.text) query.text = query.text.replace(/WHERE/i, 'AND');
+        join_columns.push(
+          uniq(add_as_join(right, `${parent_as}>_<${right.as}`).originals.concat(right.as + '.' + right.key + ' AS ' + `${right.as}>_<${right.key}`))
+        );
+        join_sqls.push(SQL `
+        LEFT JOIN
+         ${TB(right.table)} AS ${TB(right.as)}
+          ON
+          ${EQ({
+            [me.as + '.' + right.left_key]: COLUMN(right.as + '.id') 
+          })}
+          ${tag(query)}
+        `());
+        recur(right, `${parent_as}>_<${right.as}`);
+      }, me.outer_joins);
+    },
+    () => QUERY `
+      SELECT ${COLUMN(...cat(join_columns))}
+      FROM ${TB(left.table)} AS ${TB(left.as)}
+      ${SQL(pluck('text', join_sqls).join(' ').split('??'), ...cat(pluck('values', join_sqls)))}
+      ${left.query}`,
+    map(function(row) {
+      const result_obj = {};
+      let first_as = '';
+      for (const as in row) {
+        if (as.indexOf('>_<') == -1) return ;
+        const split_as = as.split('>_<');
+        const ass = initial(split_as);
+        if (!first_as) first_as = ass[0];
+        let _obj = null;
+        reduce(function(mem, key) {
+          _obj = mem[key] = mem[key] || { _: {}};
+          return mem[key]._;
+        }, ass, result_obj);
+        _obj[split_as[split_as.length-1]] = row[as];
+      }
+      return result_obj[first_as];
+    })
+  )
+}
+
 export async function CONNECT(connection) {
   const pool = new Pool(connection);
   const pool_query = pool.query.bind(pool);
@@ -353,7 +478,10 @@ export async function CONNECT(connection) {
   async function QUERY(texts, ...values) {
     return base_query(pool_query, texts, values);
   }
-
+  Object.assign(table_columns, await go(QUERY `select table_name, column_name from information_schema.columns where table_name in (select tablename from pg_tables where tableowner='mpress' order by tablename);`,
+    group_by((v) => v.table_name),
+    map(v => pluck('column_name', v))
+  ));
   return {
     VALUES,
     IN,
@@ -367,6 +495,8 @@ export async function CONNECT(connection) {
     SQL,
 
     QUERY,
+
+    LJOIN: ljoin(QUERY),
 
     ASSOCIATE: baseAssociate(QUERY),
 
