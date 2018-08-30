@@ -1,6 +1,6 @@
 import {
   is_string, is_function, flatten, flatten as cat, reduce, tap, go,
-  map, filter, reject, pluck, uniq, each, index_by, group_by, last, object
+  map, filter, reject, pluck, uniq, each, index_by, group_by, last, object, curry
 } from 'fxjs2';
 import { Pool } from 'pg';
 import { dump } from 'dumper.js';
@@ -28,6 +28,8 @@ const mix = (arr1, arr2) => arr1.reduce((res, item, i) => {
 const initial = function (ary, n, guard) {
   return Array.prototype.slice.call(ary, 0, Math.max(0, ary.length - (n == null || guard ? 1 : n)));
 };
+
+const cmap = curry((f, arr) => Promise.all(arr.map(f)));
 
 const add_column = me =>
   me.column == '*' ?
@@ -74,7 +76,7 @@ function ready_sqls(strs, tails) {
           as = as.substr(1).trim();
           return { depth, as, rel_type }
         } else if (prefix == 'p ') {
-          rel_type = as[3];
+          rel_type = as[2];
           as = as.substr(3).trim();
           return { depth, as, rel_type, is_poly: true }
         } else {
@@ -296,7 +298,7 @@ function baseAssociate(QUERY) {
 
           me.poly_type = me.is_poly ?
             SQL `AND ${EQ(
-              typeof me.poly_type == 'object' ? me.poly_type : { attached_type: me.poly_type || left.table }
+              (me.poly_type && typeof me.poly_type == 'object') ? me.poly_type : { attached_type: me.poly_type || left.table }
             )}` : tag();
           cur.push(me);
         }, rest);
@@ -310,7 +312,11 @@ function baseAssociate(QUERY) {
         return go(
           [lefts, me],
           function recur([lefts, option]) {
-            return option.rels.length && go(option.rels, each(async function(me) {
+            // each(function(left) {
+            //   left._ = left._ || {};
+            // }, lefts);
+
+            return lefts.length && option.rels.length && go(option.rels, cmap(async function(me) {
               const query = me.query();
               if (query && query.text) query.text = 'AND ' + query.text.replace(/WHERE|AND/i, '');
 
@@ -319,26 +325,25 @@ function baseAssociate(QUERY) {
 
               var colums = uniq(add_column(me).originals.concat(me.where_key + (me.rel_type == 'x' ? ` AS ${fold_key}` : '')));
 
-              const rights = await QUERY `
+              var in_vals = filter(a => a != null, pluck(me.left_key, lefts));
+
+              const rights = !in_vals.length ? [] : await QUERY `
                 SELECT ${COLUMN(...colums)}
                   FROM ${TB(me.table)} AS ${TB(me.as)} 
                   ${me.xjoin} 
                   WHERE 
-                    ${IN(me.where_key, pluck(me.left_key, lefts))}
+                    ${IN(me.where_key, in_vals)}
                     ${me.poly_type}
                     ${tag(query)}`;
 
-              var [folder, default_value] = me.rel_type == '-' ?
-                [index_by, () => ({})] : [group_by, () => []];
+              var [folder, default_value] = me.rel_type == '-' ? [index_by, () => ({})] : [group_by, () => []];
 
               return go(
                 rights,
                 folder(a => a[fold_key]),
                 folded => each(function(left) {
                   left._ = left._ || {};
-                  left._[me.as] =
-                    folded[left[me.left_key]] ||
-                    default_value();
+                  left._[me.as] = folded[left[me.left_key]] || default_value();
                 }, lefts),
                 () => recur([rights, me]));
             }));
@@ -514,9 +519,7 @@ export async function CONNECT(connection) {
       _SQL(texts, values),
       replace_qq,
       query => is_injection(query) ? Promise.reject('INJECTION ERROR') : query,
-      // tap(function({text: query}) {
       tap(function(query) {
-        console.log(i++ , '-----------------')
         if (MQL_DEBUG.DUMP) dump(query);
         typeof MQL_DEBUG.LOG == 'function' ?
           MQL_DEBUG.LOG(query) : MQL_DEBUG.LOG && console.log(query);
