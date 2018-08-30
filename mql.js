@@ -32,10 +32,10 @@ const mix = (arr1, arr2) => arr1.reduce((res, item, i) => {
 
 const add_column = me =>
   me.column == '*' ?
-    COLUMN(me.table + '.*') :
+    COLUMN(me.as + '.*') :
     COLUMN(...go(
       me.column.originals.concat(pluck('left_key', me.rels)),
-      map(c => me.table + '.' + c),
+      map(c => me.as + '.' + c),
       uniq));
 
 const to_qq = () => '??';
