@@ -143,9 +143,9 @@ await ASSOCIATE `
     < comments
       p < photos
 `;
-// SELECT * FROM photos WHERE attached_id IN (${map($ => $.id, posts)}) attached_type = 'photos'
-// SELECT * FROM photos WHERE attached_id IN (${map($ => $.id, users)}) attached_type = 'users'
-// SELECT * FROM photos WHERE attached_id IN (${map($ => $.id, comments)}) attached_type = 'comments'
+// SELECT * FROM photos WHERE attached_id IN (${map($ => $.id, posts)}) AND attached_type = 'photos';
+// SELECT * FROM photos WHERE attached_id IN (${map($ => $.id, users)}) AND attached_type = 'users';
+// SELECT * FROM photos WHERE attached_id IN (${map($ => $.id, comments)}) AND attached_type = 'comments';
 ```
 
 ### Many to many
@@ -315,7 +315,7 @@ await ROLLBACK();
 
 ## DEBUG
 
-`MQL_DEBUG.LOG`를 `true`로 설정한 후 `QUERY`를 실행하면 콘솔에 DB에 보낸 쿼리들을 출력합니다.
+`MQL_DEBUG.LOG`를 `true`로 설정한 후 `QUERY`를 실행하면 콘솔에 DB로 보낸 쿼리들을 출력합니다.
 
 ```javascript
 const { MQL_DEBUG } = require('mql2');
