@@ -179,11 +179,13 @@ const authors = await ASSOCIATE `
 authors[0]._.books[0].name; // 책 이름
 ```
 
-### 옵션 사용
+### 옵션
+
+#### 사용
 
 ```javascript
 const posts = await ASSOCIATE `
-  posts ${SQL `WHERE is_hidden IS NOT true LIMIT ${limit} OFFSET ${offset}`}
+  posts
     - writer ${{
         left_key: 'user_id',
         key: 'id'
@@ -194,17 +196,35 @@ const posts = await ASSOCIATE `
 
 위와 같이 데이터베이스의 테이블명과 사용하고자하는 이름이 다르거나, `ASSOCIATE`가 자동생성하는 컬럼명 등과 실제 데이터베이스의 상태가 다를 경우 옵션을 이용하여 맞춰줄 수 있습니다. 그러나 대부분의 경우는 데이터베이스의 VIEW를 사용하는 것이 코드 관리에 좋습니다.
 
+#### 기본 옵션
+
+```javascript
+```
+
+#### Polymorphic 옵션
+
+```javascript
+```
+
+####
+
+```javascript
+```
+
 ## Transaction
 
 ```javascript
-const { QUERY_T, COMMIT, ROLLBACK } = await TRANSACTION();
-await QUERY_T `
+const { QUERY, COMMIT, ROLLBACK } = await TRANSACTION();
+
+await QUERY `
   INSERT INTO posts ${post}
 `;
-await QUERY_T `
+await QUERY `
   UPDATE posts ${SET({ body: 'yo!', updated_at: new Date() })} WHERE id = ${post.id}
 `;
 await ROLLBACK();
+
+// ROLLBACK이나 COMMIT후에는 위에서 만든 QUERY 함수는 더이상 사용할 수 없습니다.
 ```
 
 ## DEBUG
