@@ -288,9 +288,9 @@ const posts = await ASSOCIATE `
       key: 'parent_id'
     }}
     x tags ${{ // x 를 통해 중간 테이블을 join 하여 다대다 관계 구현
-      xtable: 'tags_articles', // 중간 테이블 이름
       left_key: 'id', // articles.id (articles.id = tags_articles.article_id)
       left_xkey: 'article_id', // left_key와 매칭되는 tags_articles의 키 article_id
+      xtable: 'tags_articles', // 중간 테이블 이름
       xkey: 'tag_name', // key와 매칭되는 tags_articles의 키 tag_name
       key: 'name' // tags가 가진 키 (tags_articles.tag_name = tags.name)
     }}
