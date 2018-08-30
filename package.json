@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/marpple/MQL",
   "dependencies": {
+    "dumper.js": "^1.1.1",
     "esm": "^3.0.80",
     "fxjs2": "0.0.4",
     "pg": "^7.4.3"

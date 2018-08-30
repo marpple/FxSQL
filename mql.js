@@ -1,24 +1,16 @@
 import {
-  is_string,
-  is_function,
-  flatten,
-  flatten as cat,
-  reduce,
-  tap,
-  go,
-  map,
-  filter,
-  reject,
-  pluck,
-  uniq,
-  each,
-  index_by,
-  group_by,
-  last
+  is_string, is_function, flatten, flatten as cat, reduce, tap, go, map, filter, reject, pluck, uniq, each, index_by, group_by, last
 } from 'fxjs2';
 import { Pool } from 'pg';
-import { dump as DUMP } from 'dumper.js';
-function dump(){}dump = DUMP;
+import { dump } from 'dumper.js';
+
+const MQL_DEBUG = {
+  DUMP: false,
+  LOG: false
+};
+
+export { MQL_DEBUG };
+
 const table_columns = {};
 const SymbolColumn = Symbol('COLUMN');
 const SymbolTag = Symbol('TAG');
@@ -46,11 +38,10 @@ const add_column = me =>
 
 const add_as_join = (me, as) =>
   COLUMN(...go(
-      me.column.originals.concat(pluck('left_key', me.outer_joins)),
+      me.column.originals.concat(pluck('left_key', me.left_joins)),
       map(c => me.as + '.' + c + ' AS ' + `${as}>_<${c}`),
       uniq
     ));
-
 
 const to_qq = () => '??';
 const escape_dq = value => ('' + value).replace(/\\/g, "\\\\").replace(/"/g, '""');
@@ -68,28 +59,28 @@ const is_injection = query => query == SymbolInjection;
 
 function ready_sqls(strs, tails) {
   const options = strs
-      .map(s => s
-        .replace(/\s*\n/, '')
-        .split('\n')
-        .map((s) => {
-          var depth = s.match(/^\s*/)[0].length,
-            as = s.trim(),
-            rel_type;
+    .map(s => s
+      .replace(/\s*\n/, '')
+      .split('\n')
+      .map((s) => {
+        var depth = s.match(/^\s*/)[0].length,
+          as = s.trim(),
+          rel_type;
 
-          var prefix = as.substr(0, 2);
-          if (['- ', '< ', 'x '].includes(prefix)) {
-            rel_type = prefix.trim();
-            as = as.substr(1).trim();
-            return { depth, as, rel_type }
-          } else if (prefix == 'p ') {
-            rel_type = as[3];
-            as = as.substr(3).trim();
-            return { depth, as, rel_type, is_poly: true }
-          } else {
-            return { depth, as };
-          }
-        })
-      );
+        var prefix = as.substr(0, 2);
+        if (['- ', '< ', 'x '].includes(prefix)) {
+          rel_type = prefix.trim();
+          as = as.substr(1).trim();
+          return { depth, as, rel_type }
+        } else if (prefix == 'p ') {
+          rel_type = as[3];
+          as = as.substr(3).trim();
+          return { depth, as, rel_type, is_poly: true }
+        } else {
+          return { depth, as };
+        }
+      })
+    );
 
     go(
       tails,
@@ -124,7 +115,7 @@ function merge_query(queries) {
 
   var query = reduce((res, query) => {
     if (!query) return res;
-    if (query.text) res.text += query.text;
+    if (query.text) res.text += (' ' + query.text);
     if (query.values) res.values.push(...query.values);
     return res;
   }, queries, {
@@ -260,6 +251,13 @@ export function SQL(texts, ...values) {
   });
 }
 
+export function SQLS(sqls) {
+  return tag(function() {
+    return sqls.find(sql => !is_tag(sql)) ?
+      SymbolInjection : merge_query(sqls.map(sql => sql()));
+  });
+}
+
 function baseAssociate(QUERY) {
   return async function(strs, ...tails) {
     return go(
@@ -280,20 +278,19 @@ function baseAssociate(QUERY) {
           left.rels.push(me);
           if (me.rel_type == '-') {
             me.left_key = me.left_key || (me.is_poly ? 'id' : me.table.substr(0, me.table.length-1) + '_id');
-            me.key = me.key || (me.is_poly ? 'attached_id' : 'id');
-          } else {
+            me.where_key = me.key || (me.is_poly ? 'attached_id' : 'id');
+            me.xjoin = tag();
+          } else if (me.rel_type == '<') {
             me.left_key = me.left_key || 'id';
-            me.key = me.key || (me.is_poly ? 'attached_id' : left.table.substr(0, left.table.length-1) + '_id');
-          }
-
-          if (me.rel_type == 'x') {
+            me.where_key = me.key || (me.is_poly ? 'attached_id' : left.table.substr(0, left.table.length-1) + '_id');
+            me.xjoin = tag();
+          } else if (me.rel_type == 'x') {
+            me.left_key = me.left_key || 'id';
+            me.where_key = '_#_xtable_#_.' + (me.left_xkey || left.table.substr(0, left.table.length-1) + '_id');
             var xtable = me.xtable || (left.table + '_' + me.table);
-            me.join = SQL `INNER JOIN ${TB(xtable)} on ${EQ({
-              [xtable + '.' + me.table.substr(0, me.table.length-1) + '_id']: COLUMN(me.as + '.id')  
+            me.xjoin = SQL `INNER JOIN ${TB(xtable)} as "_#_xtable_#_" on ${EQ({
+              ['_#_xtable_#_.' + (me.xkey || me.table.substr(0, me.table.length-1) + '_id')]: COLUMN(me.as + '.' + (me.key || 'id'))
             })}`;
-            me.key = xtable + '.' + me.key;
-          } else {
-            me.join = tag();
           }
 
           me.poly_type = me.is_poly ?
@@ -317,21 +314,21 @@ function baseAssociate(QUERY) {
               if (query && query.text) query.text = query.text.replace(/WHERE/i, 'AND');
 
               var fold_key = me.rel_type == 'x' ?
-                `_#_${me.key.split('.')[1]}_#_` : me.key;
+                `_#_${me.where_key.split('.')[1]}_#_` : me.where_key;
 
-              var colums = uniq(add_column(me).originals.concat(me.key + (me.rel_type == 'x' ? ` AS ${fold_key}` : '')));
+              var colums = uniq(add_column(me).originals.concat(me.where_key + (me.rel_type == 'x' ? ` AS ${fold_key}` : '')));
 
               const rights = await QUERY `
                 SELECT ${COLUMN(...colums)}
                   FROM ${TB(me.table)} AS ${TB(me.as)} 
-                  ${me.join} 
+                  ${me.xjoin} 
                   WHERE 
-                    ${IN(me.key, pluck(me.left_key, lefts))}
+                    ${IN(me.where_key, pluck(me.left_key, lefts))}
                     ${me.poly_type}
                     ${tag(query)}`;
 
               var [folder, default_value] = me.rel_type == '-' ?
-                [index_by, () => {}] : [group_by, () => []];
+                [index_by, () => ({})] : [group_by, () => []];
 
               return go(
                 rights,
@@ -362,10 +359,10 @@ function ljoin(QUERY) {
         option.query = option.query || tag();
         option.table = option.table || (option.rel_type == '-' ? option.as + 's' : option.as);
         option.column = option.column || CL(...table_columns[option.table]);
-        option.outer_joins = [];
+        option.left_joins = [];
         option.rels = [];
       }),
-      function setting([left, ...rest]) {
+      ([left, ...rest]) => {
         const cur = [left];
         each(me => {
           while (!(last(cur).depth < me.depth)) cur.pop();
@@ -373,45 +370,44 @@ function ljoin(QUERY) {
            if (me.rel_type == '-') {
             me.left_key = me.left_key || (me.is_poly ? 'id' : me.table.substr(0, me.table.length-1) + '_id');
             me.key = me.key || (me.is_poly ? 'attached_id' : 'id');
-            left.outer_joins.push(me);
+            left.left_joins.push(me);
           } else {
             me.left_key = me.left_key || 'id';
             me.key = me.key || (me.is_poly ? 'attached_id' : left.table.substr(0, left.table.length-1) + '_id');
             left.rels.push(me);
-            // if (me.rel_type == 'x') {
-            //   var table2 = me.xtable || (left.table + '_' + me.table);
-            //   me.join = SQL `INNER JOIN ${TB(table2)} on ${EQ({
-            //     [table2 + '.' + me.table.substr(0, me.table.length-1) + '_id']: COLUMN(me.table + '.id')
-            //   })}`;
-            //   me.key = table2 + '.' + me.key;
-            // } else {
-            //   me.join = tag();
-            // }
           }
+
+          //
+          
+          me.poly_type = me.is_poly ?
+            SQL `AND ${EQ(
+              is_string(me.poly_type) ? { attached_type: me.poly_type || left.table } : me.poly_type
+            )}` : tag();
+
           cur.push(me);
         }, rest);
         return left;
       },
-      async function(me) {
-        return left_outer_join_sql(me, null, QUERY);
-      }
+      async me => me.left_joins.length ?
+        left_join_query(me, null, QUERY) :
+        QUERY `
+          SELECT ${add_column(me)}
+          FROM ${TB(me.table)} AS ${TB(me.as)} ${me.query}`
     );
   };
 
 }
 
-function make_join_group(join_group, outer_joins) {
+function make_join_group(join_group, left_joins) {
   return each(join_right => {
-    // console.log(add_as_join(join_right)())
     join_group.push(join_right);
-    make_join_group(join_group, join_right.outer_joins);
-  }, outer_joins)
+    make_join_group(join_group, join_right.left_joins);
+  }, left_joins)
 }
 
-function left_outer_join_sql(left, where_in_query, QUERY) {
-  const join_columns = [];
+function left_join_query(left, where_in_query, QUERY) {
+  const join_columns = [add_as_join(left, left.as).originals];
   const join_sqls = [];
-  join_columns.push(add_as_join(left, left.as).originals);
   return go(
     left,
     function recur(me, parent_as) {
@@ -430,31 +426,29 @@ function left_outer_join_sql(left, where_in_query, QUERY) {
             [me.as + '.' + right.left_key]: COLUMN(right.as + '.id') 
           })}
           ${tag(query)}
-        `());
+        `);
         recur(right, `${parent_as}>_<${right.as}`);
-      }, me.outer_joins);
+      }, me.left_joins);
     },
     () => QUERY `
       SELECT ${COLUMN(...cat(join_columns))}
       FROM ${TB(left.table)} AS ${TB(left.as)}
-      ${SQL(pluck('text', join_sqls).join(' ').split('??'), ...cat(pluck('values', join_sqls)))}
+      ${SQLS(join_sqls)}
       ${left.query}`,
-    map(function(row) {
+    map(row => {
       const result_obj = {};
-      let first_as = '';
       for (const as in row) {
         if (as.indexOf('>_<') == -1) return ;
+        let _obj = null;
         const split_as = as.split('>_<');
         const ass = initial(split_as);
-        if (!first_as) first_as = ass[0];
-        let _obj = null;
         reduce(function(mem, key) {
           _obj = mem[key] = mem[key] || { _: {}};
           return mem[key]._;
         }, ass, result_obj);
         _obj[split_as[split_as.length-1]] = row[as];
       }
-      return result_obj[first_as];
+      for (const r_key in result_obj) return result_obj[r_key];
     })
   )
 }
@@ -469,7 +463,9 @@ export async function CONNECT(connection) {
       replace_qq,
       query => is_injection(query) ? Promise.reject('INJECTION ERROR') : query,
       tap(function(query) {
-        if (global.MQL_DEBUG) console.log(query);
+        if (MQL_DEBUG.DUMP) dump(query);
+        typeof MQL_DEBUG.LOG == 'function' ?
+          MQL_DEBUG.LOG(query) : MQL_DEBUG.LOG && console.log(query);
       }),
       excute_query,
       res => res.rows);
@@ -478,37 +474,34 @@ export async function CONNECT(connection) {
   async function QUERY(texts, ...values) {
     return base_query(pool_query, texts, values);
   }
-  Object.assign(table_columns, await go(QUERY `select table_name, column_name from information_schema.columns where table_name in (select tablename from pg_tables where tableowner='mpress' order by tablename);`,
+  Object.assign(table_columns, await go(QUERY `
+    SELECT table_name, column_name 
+    FROM information_schema.columns 
+    WHERE 
+      table_name in (
+        SELECT tablename 
+        FROM pg_tables
+        WHERE 
+          tableowner=${connection.user} ORDER BY tablename
+      );`,
     group_by((v) => v.table_name),
     map(v => pluck('column_name', v))
   ));
   return {
-    VALUES,
-    IN,
-    NOT_IN,
-    EQ,
-    SET,
-    COLUMN,
-    CL,
-    TABLE,
-    TB,
-    SQL,
+    VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL,
 
-    QUERY,
-
-    LJOIN: ljoin(QUERY),
-
-    ASSOCIATE: baseAssociate(QUERY),
+    QUERY, LJOIN: ljoin(QUERY), ASSOCIATE: baseAssociate(QUERY),
 
     async TRANSACTION() {
       const client = await pool.connect();
       const client_query = client.query.bind(client);
       await client.query('BEGIN');
-      function QUERY_T(texts, ...values) {
+      function QUERY(texts, ...values) {
         return base_query(client_query, texts, values);
       }
       return {
-        QUERY_T,
+        QUERY, ASSOCIATE: baseAssociate(QUERY), LJOIN: ljoin(QUERY),
+
         async COMMIT() {
           await client.query('COMMIT');
           return await client.release();
@@ -516,8 +509,7 @@ export async function CONNECT(connection) {
         async ROLLBACK() {
           await client.query('ROLLBACK');
           return await client.release();
-        },
-        ASSOCIATE_T: baseAssociate(QUERY)
+        }
       }
     }
   }
