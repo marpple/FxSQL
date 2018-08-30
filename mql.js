@@ -1,5 +1,5 @@
 import {
-  is_string, is_function, flatten, flatten as cat, reduce, tap, go, map, filter, reject, pluck, uniq, each, index_by, group_by, last
+  is_string, is_function, flatten, flatten as cat, reduce, tap, go, map, filter, reject, pluck, uniq, each, index_by, group_by, last, object
 } from 'fxjs2';
 import { Pool } from 'pg';
 import { dump } from 'dumper.js';
