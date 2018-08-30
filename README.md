@@ -179,21 +179,20 @@ const authors = await ASSOCIATE `
 authors[0]._.books[0].name; // 책 이름
 ```
 
-### 옵션
+### 옵션 사용
 
 ```javascript
 const posts = await ASSOCIATE `
   posts ${SQL `WHERE is_hidden IS NOT true LIMIT ${limit} OFFSET ${offset}`}
-    - user ${{
+    - writer ${{
         left_key: 'user_id',
         key: 'id'
         table: 'users'
     }}
-    < comments
-      - user
 `;
 ```
 
+위와 같이 데이터베이스의 테이블명과 사용하고자하는 이름이 다르거나, `ASSOCIATE`가 자동생성하는 컬럼명 등과 실제 데이터베이스의 상태가 다를 경우 옵션을 이용하여 맞춰줄 수 있습니다. 그러나 대부분의 경우는 데이터베이스의 VIEW를 사용하는 것이 코드 관리에 좋습니다.
 
 ## Transaction
 
@@ -207,3 +206,17 @@ await QUERY_T `
 `;
 await ROLLBACK();
 ```
+
+## DEBUG
+
+`MQL_DEBUG.LOG`를 `true`로 설정한 후 `QUERY`를 실행하면 콘솔에 DB에 보낸 쿼리들을 출력합니다.
+
+```javascript
+const { MQL_DEBUG } = require('mql2');
+
+MQL_DEBUG.LOG = true;
+QUERY `SELECT ${"hi~"} as ho`;
+
+// { text: 'SELECT $1 as ho', values: ['hi'] }
+```
+
