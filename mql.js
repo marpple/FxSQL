@@ -269,11 +269,11 @@ function baseAssociate(QUERY) {
           }
 
           if (me.rel_type == 'x') {
-            var table2 = me.xtable || (left.table + '_' + me.table);
-            me.join = SQL `INNER JOIN ${TB(table2)} on ${EQ({
-              [table2 + '.' + me.table.substr(0, me.table.length-1) + '_id']: COLUMN(me.table + '.id')  
+            var xtable = me.xtable || (left.table + '_' + me.table);
+            me.join = SQL `INNER JOIN ${TB(xtable)} on ${EQ({
+              [xtable + '.' + me.table.substr(0, me.table.length-1) + '_id']: COLUMN(me.as + '.id')  
             })}`;
-            me.key = table2 + '.' + me.key;
+            me.key = xtable + '.' + me.key;
           } else {
             me.join = tag();
           }
@@ -289,7 +289,7 @@ function baseAssociate(QUERY) {
       async function(me) {
         const lefts = await QUERY `
           SELECT ${add_column(me)}
-            FROM ${TB(me.table)} ${me.query}`;
+            FROM ${TB(me.table)} AS ${TB(me.as)} ${me.query}`;
 
         return go(
           [lefts, me],
@@ -305,7 +305,7 @@ function baseAssociate(QUERY) {
 
               const rights = await QUERY `
                 SELECT ${COLUMN(...colums)}
-                  FROM ${TB(me.table)}
+                  FROM ${TB(me.table)} AS ${TB(me.as)} 
                   ${me.join} 
                   WHERE 
                     ${IN(me.key, pluck(me.left_key, lefts))}
