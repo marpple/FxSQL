@@ -295,7 +295,7 @@ function baseAssociate(QUERY) {
 
           me.poly_type = me.is_poly ?
             SQL `AND ${EQ(
-              is_string(me.poly_type) ? { attached_type: me.poly_type || left.table } : me.poly_type
+              typeof me.poly_type == 'object' ? me.poly_type : { attached_type: me.poly_type || left.table }
             )}` : tag();
           cur.push(me);
         }, rest);
