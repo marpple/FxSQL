@@ -20,7 +20,7 @@ npm i mql2
 
 ```javascript
 const { CONNECT } = require('mql2');
-const MQL = await CONNECT({
+const POOL = await CONNECT({
   host: 'localhost',
   user: 'username',
   password: '1234',
@@ -32,11 +32,13 @@ const MQL = await CONNECT({
 ## 간단한 쿼리
 
 ```javascript
-const { QUERY } = MQL;
+const { QUERY } = POOL;
 const id = 10;
 const posts = await QUERY `SELECT * FROM posts WHERE id = ${id}`;
 // [{ id: 10, ... }]
 ```
+
+`CONNECT`를 통해 얻은 객체를 통해 얻은 `QUERY`는 connection pool을 이용합니다.
 
 ## 지원하는 tags
 
@@ -93,8 +95,9 @@ await QUERY `
 
 ## Associations
 
-
 ### 기본
+
+`ASSOCIATE`는 connection pool을 이용합니다.
 
 ```javascript
 /*
@@ -110,6 +113,8 @@ await QUERY `
 *  - post_id
 *  - is_hidden
 * */
+
+const { ASSOCIATE } = POOL;
 
 const posts = await ASSOCIATE `
   posts
@@ -180,117 +185,116 @@ authors[0]._.books[0].name; // 책 이름
 ### 옵션
 
 ```javascript
-  const { ASSOCIATE } = require('mql2');
-  /*
-  * 테이블명과 컬럼명이 이미 MQL 포맷과 동일하거나 ViEW 등을 이용해 잘 맞춰놨을 때에는
-  * ASSOCIATE에게 넘긴 문자열들을 기반으로 자동으로 테이블명과 컬럼명들을 적절히 생성합니다.
-  * users
-  *  - id
-  * posts
-  *  - id
-  *  - user_id
-  * comments
-  *  - id
-  *  - post_id
-  *  - user_id
-  * likes
-  *  - attached_type
-  *  - attached_id
-  *  - user_id
-  * posts_tags
-  *  - post_id
-  *  - tag_id
-  * tags
-  *  - id
-  * */
+/*
+* 테이블명과 컬럼명이 이미 MQL 포맷과 동일하거나 ViEW 등을 이용해 잘 맞춰놨을 때에는
+* ASSOCIATE에게 넘긴 문자열들을 기반으로 자동으로 테이블명과 컬럼명들을 적절히 생성합니다.
+* users
+*  - id
+* posts
+*  - id
+*  - user_id
+* comments
+*  - id
+*  - post_id
+*  - user_id
+* likes
+*  - attached_type
+*  - attached_id
+*  - user_id
+* posts_tags
+*  - post_id
+*  - tag_id
+* tags
+*  - id
+* */
 
-  ASSOCIATE `
-    posts
+ASSOCIATE `
+  posts
+    - user
+    < comments
+     - user
+     p < likes
       - user
-      < comments
-       - user
-       p < likes
-        - user
-      p < likes
-        - user
-      x tags
-  `;
-
-  /*
-  * 위 상황에서 컬럼들을 최소화해서 가져오고 싶거나 쿼리를 추가하고 싶다면 아래와 같이할 수 있습니다.
-  * column에 기본키나 외래키 등을 포함시키지 않아도 적절히 ASSOCIATE 내부에서 추가하여 적절히 가져옵니다.
-  * */
-
-  ASSOCIATE `
-    posts ${SQL `ORDER BY id DESC LIMIT ${10}`}
+    p < likes
       - user
-      < comments ${{
-        column: COLUMN('body', 'updated_at')
-      }}
-       - user
-       p < likes
-        - user
-      p < likes
-        - user
-      x tags
-  `;
+    x tags
+`;
 
+/*
+* 위 상황에서 컬럼들을 최소화해서 가져오고 싶거나 쿼리를 추가하고 싶다면 아래와 같이할 수 있습니다.
+* column에 기본키나 외래키 등을 포함시키지 않아도 적절히 ASSOCIATE 내부에서 추가하여 적절히 가져옵니다.
+* */
 
-  /*
-  * 만일 테이블이 아래와 같다면 옵션을 통해 매칭을 시켜주면 됩니다.
-  * members
-  *  - member_id
-  * articles
-  *  - id
-  *  - writer_id
-  * comments
-  *  - id
-  *  - article_id
-  *  - writer_id
-  * likes
-  *  - parent_name
-  *  - parent_id
-  *  - member_id
-  * tags_articles
-  *  - article_id
-  *  - tag_name
-  * tags
-  *  - name
-  * */
-
-  const posts = await ASSOCIATE `
-    posts ${{
-      table: 'articles' // 데이터베이스 테이블 명이 다를 때
+ASSOCIATE `
+  posts ${SQL `ORDER BY id DESC LIMIT ${10}`}
+    - user
+    < comments ${{
+      column: COLUMN('body', 'updated_at')
     }}
-      - user ${{ // - 를 했으므로 하나를 객체로 가져옴
+     - user
+     p < likes
+      - user
+    p < likes
+      - user
+    x tags
+`;
+
+
+/*
+* 만일 테이블이 아래와 같다면 옵션을 통해 매칭을 시켜주면 됩니다.
+* members
+*  - member_id
+* articles
+*  - id
+*  - writer_id
+* comments
+*  - id
+*  - article_id
+*  - writer_id
+* likes
+*  - parent_name
+*  - parent_id
+*  - member_id
+* tags_articles
+*  - article_id
+*  - tag_name
+* tags
+*  - name
+* */
+
+const posts = await ASSOCIATE `
+  posts ${{
+    table: 'articles' // 데이터베이스 테이블 명이 다를 때
+  }}
+    - user ${{ // - 를 했으므로 하나를 객체로 가져옴
+      left_key: 'writer_id', // articles가 가진 members.member_id를 가리키는 컬럼
+      key: 'member_id', // members 테이블이 가진 키
+      table: 'members' // user의 테이블 명
+    }}
+    < comments ${{ // < 를 했으므로 배열로 여러개를 가져옴
+      key: 'article_id' // articles의 id를 가리키는 comments가 가진 컬럼
+    }}
+      - user ${{
         left_key: 'writer_id', // articles가 가진 members.member_id를 가리키는 컬럼
         key: 'member_id', // members 테이블이 가진 키
         table: 'members' // user의 테이블 명
       }}
-      < comments ${{ // < 를 했으므로 배열로 여러개를 가져옴
-        key: 'article_id' // articles의 id를 가리키는 comments가 가진 컬럼
-      }}
-        - user ${{
-          left_key: 'writer_id', // articles가 가진 members.member_id를 가리키는 컬럼
-          key: 'member_id', // members 테이블이 가진 키
-          table: 'members' // user의 테이블 명
-        }}
-        p < likes ${{ // p < 를 이용해 하나의 likes 테이블을 통해 comments와 posts의 likes를 구현
-          poly_type: { parent_name: 'comments' },
-          key: 'parent_id'
-        }}
       p < likes ${{ // p < 를 이용해 하나의 likes 테이블을 통해 comments와 posts의 likes를 구현
-        poly_type: { parent_name: 'articles' },
+        poly_type: { parent_name: 'comments' },
         key: 'parent_id'
       }}
-      x tags ${{ // x 를 통해 중간 테이블을 join 하여 다대다 관계 구현
-        xtable: 'tags_articles', // 중간 테이블 이름
-        left_key: 'id', // articles.id (articles.id = tags_articles.article_id)
-        left_xkey: 'article_id', // left_key와 매칭되는 tags_articles의 키 article_id
-        xkey: 'tag_name', // key와 매칭되는 tags_articles의 키 tag_name
-        key: 'name' // tags가 가진 키 (tags_articles.tag_name = tags.name)
-      }}
-  `;
+    p < likes ${{ // p < 를 이용해 하나의 likes 테이블을 통해 comments와 posts의 likes를 구현
+      poly_type: { parent_name: 'articles' },
+      key: 'parent_id'
+    }}
+    x tags ${{ // x 를 통해 중간 테이블을 join 하여 다대다 관계 구현
+      xtable: 'tags_articles', // 중간 테이블 이름
+      left_key: 'id', // articles.id (articles.id = tags_articles.article_id)
+      left_xkey: 'article_id', // left_key와 매칭되는 tags_articles의 키 article_id
+      xkey: 'tag_name', // key와 매칭되는 tags_articles의 키 tag_name
+      key: 'name' // tags가 가진 키 (tags_articles.tag_name = tags.name)
+    }}
+`;
 ```
 
 위와 같이 데이터베이스의 테이블명과 사용하고자하는 이름이 다르거나, `ASSOCIATE`가 자동생성하는 컬럼명 등과 실제 데이터베이스의 상태가 다를 경우 옵션을 이용하여 맞춰줄 수 있습니다. 그러나 대부분의 경우는 데이터베이스의 VIEW를 사용하는 것이 코드 관리에 좋습니다.
@@ -298,6 +302,15 @@ authors[0]._.books[0].name; // 책 이름
 ## Transaction
 
 ```javascript
+const { CONNECT } = require('mql2');
+const POOL = await CONNECT({
+  host: 'localhost',
+  user: 'username',
+  password: '1234',
+  database: 'dbname',
+  charset: 'utf8'
+});
+const { TRANSACTION } = POOL;
 const { QUERY, COMMIT, ROLLBACK } = await TRANSACTION();
 
 await QUERY `
@@ -307,9 +320,9 @@ await QUERY `
   UPDATE posts ${SET({ body: 'yo!', updated_at: new Date() })} WHERE id = ${post.id}
 `;
 await ROLLBACK();
-
-// ROLLBACK이나 COMMIT후에는 위에서 만든 QUERY 함수는 더이상 사용할 수 없습니다.
 ```
+
+`TRANSACTION`을 통해 얻은 객체를 통해 얻은 `QUERY`는 하나의 connection을 이용합니다. `ROLLBACK`이나 `COMMIT`후에는 위에서 만든 QUERY 함수는 더이상 사용할 수 없습니다.
 
 ## DEBUG
 
@@ -323,4 +336,8 @@ QUERY `SELECT ${"hi~"} as ho`;
 
 // { text: 'SELECT $1 as ho', values: ['hi'] }
 ```
+
+## Connection Pool 옵션
+
+MQL은 내부적으로 node-postgres를 사용합니다. `CONNECTION` 함수에 사용되는 옵션은 node-postgres와 동일합니다. [디비 연결](https://node-postgres.com/features/connecting)이나 [커넥션 풀](https://node-postgres.com/api/pool)과 관련된 자세한 옵션은 [node-postgres](https://node-postgres.com/) 사이트에서 확인하실 수 있습니다.
 
