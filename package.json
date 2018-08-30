@@ -1,6 +1,6 @@
 {
   "name": "mql2",
-  "version": "0.0.14",
+  "version": "0.0.16",
   "description": "query builder",
   "main": "index.js",
   "scripts": {
@@ -10,6 +10,12 @@
     "type": "git",
     "url": "git+https://github.com/marpple/MQL.git"
   },
+  "files": [
+    "mql.js",
+    "index.js",
+    "LICENSE",
+    "README.md"
+  ],
   "author": "marpple",
   "license": "MIT",
   "bugs": {
