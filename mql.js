@@ -312,7 +312,7 @@ function baseAssociate(QUERY) {
           function recur([lefts, option]) {
             return option.rels.length && go(option.rels, each(async function(me) {
               const query = me.query();
-              if (query && query.text) query.text = query.text.replace(/WHERE/i, 'AND');
+              if (query && query.text) query.text = 'AND ' + query.text.replace(/WHERE|AND/i, '');
 
               var fold_key = me.rel_type == 'x' ?
                 `_#_${me.where_key.split('.')[1]}_#_` : me.where_key;
@@ -368,15 +368,15 @@ function ljoin(QUERY) {
         each(me => {
           while (!(last(cur).depth < me.depth)) cur.pop();
           const left = last(cur);
-           if (me.rel_type == '-') {
+          if (me.rel_type == '-') {
             me.left_key = me.left_key || (me.is_poly ? 'id' : me.table.substr(0, me.table.length-1) + '_id');
             me.key = me.key || (me.is_poly ? 'attached_id' : 'id');
             left.left_joins.push(me);
           } else {
             me.left_key = me.left_key || 'id';
             me.key = me.key || (me.is_poly ? 'attached_id' : left.table.substr(0, left.table.length-1) + '_id');
-            left.rels.push(me);
           }
+          left.rels.push(me);
 
           //
           
@@ -389,11 +389,37 @@ function ljoin(QUERY) {
         }, rest);
         return left;
       },
-      async me => me.left_joins.length ?
-        left_join_query(me, null, QUERY) :
-        QUERY `
-          SELECT ${add_column(me)}
-          FROM ${TB(me.table)} AS ${TB(me.as)} ${me.query}`
+      async left => [
+        left,
+        left.left_joins.length ?
+          await left_join_query(left, null, QUERY) :
+          await QUERY `
+            SELECT ${add_column(left)}
+            FROM ${TB(left.table)} AS ${TB(left.as)} ${left.query}`
+      ],
+      function recur([left, results]) {
+        return go(
+          left.rels,
+          each(function(me) {
+            const next_result = cat(map(r => r._ ? r._[me.as] : null, results));
+            const f_key_ids = uniq(filter((r) => !!r, pluck(me.left_key, results)));
+            if (me.rel_type == '-' || !f_key_ids.length) return recur([me, next_result]);
+            return go(
+              (!me.left_join_over && me.left_joins.length ?
+                left_join_query : where_in_query)(me, SQL `WHERE ${IN(me.as + '.' + me.key, f_key_ids)}`, QUERY),
+              group_by((v) => v[me.key]),
+              function(groups) {
+                each(function(result) {
+                  result._ = result._ || {};
+                  result._[me.as] = (groups[result[me.left_key]] || []);
+                }, results);
+                return recur([me, cat(map(r => r._ ? r._[me.as] : null, results))]);
+              }
+            );
+          }),
+          () => results
+        );
+      }
     );
   };
 
@@ -406,18 +432,35 @@ function make_join_group(join_group, left_joins) {
   }, left_joins)
 }
 
+function where_in_query(left, where_in, QUERY) {
+  const colums = uniq(add_column(left).originals.concat(left.key));
+  const query = left.query();
+  if (query && query.text) query.text = 'AND ' + query.text.replace(/WHERE|AND/i, '');
+  return QUERY`
+  SELECT ${CL(...colums)}
+  FROM ${TB(left.table)} AS ${TB(left.as)}
+  ${where_in}
+  ${tag(query)}
+  `;
+}
+
 function left_join_query(left, where_in_query, QUERY) {
-  const join_columns = [add_as_join(left, left.as).originals];
+  const first_col = add_as_join(left, left.as).originals.concat(left.as + '.id' + ' AS ' + `${left.as}>_<id`);
+  if (left.key) first_col.push(left.as + '.' + left.key + ' AS ' + `${left.as}>_<${left.key}`);
+  const join_columns = [first_col];
   const join_sqls = [];
   return go(
     left,
     function recur(me, parent_as) {
+      me.left_join_over = true;
       parent_as = parent_as || me.as;
       each(right => {
         const query = right.query();
-        if (query && query.text) query.text = query.text.replace(/WHERE/i, 'AND');
+        if (query && query.text) query.text = 'AND ' + query.text.replace(/WHERE|AND/i, '');
         join_columns.push(
-          uniq(add_as_join(right, `${parent_as}>_<${right.as}`).originals.concat(right.as + '.' + right.key + ' AS ' + `${right.as}>_<${right.key}`))
+          uniq(add_as_join(right, `${parent_as}>_<${right.as}`).originals
+            .concat(right.as + '.' + right.key + ' AS ' + `${right.as}>_<${right.key}`)
+            .concat(left.as + '.id' + ' AS ' + `${left.as}>_<id`))
         );
         join_sqls.push(SQL `
         LEFT JOIN
@@ -431,11 +474,18 @@ function left_join_query(left, where_in_query, QUERY) {
         recur(right, `${parent_as}>_<${right.as}`);
       }, me.left_joins);
     },
-    () => QUERY `
+    () => {
+      const query = left.query();
+      if (!query) return query;
+      query.text = (where_in_query ? 'AND ' : 'WHERE ') + query.text.replace(/WHERE|AND/i, '');
+      return query;
+    },
+    (query) => QUERY `
       SELECT ${COLUMN(...cat(join_columns))}
       FROM ${TB(left.table)} AS ${TB(left.as)}
       ${SQLS(join_sqls)}
-      ${left.query}`,
+      ${where_in_query || tag()}
+      ${tag(query)}`,
     map(row => {
       const result_obj = {};
       for (const as in row) {
@@ -458,12 +508,15 @@ export async function CONNECT(connection) {
   const pool = new Pool(connection);
   const pool_query = pool.query.bind(pool);
 
+  var i = 0;
   function base_query(excute_query, texts, values) {
     return go(
       _SQL(texts, values),
       replace_qq,
       query => is_injection(query) ? Promise.reject('INJECTION ERROR') : query,
+      // tap(function({text: query}) {
       tap(function(query) {
+        console.log(i++ , '-----------------')
         if (MQL_DEBUG.DUMP) dump(query);
         typeof MQL_DEBUG.LOG == 'function' ?
           MQL_DEBUG.LOG(query) : MQL_DEBUG.LOG && console.log(query);
@@ -475,7 +528,8 @@ export async function CONNECT(connection) {
   async function QUERY(texts, ...values) {
     return base_query(pool_query, texts, values);
   }
-  Object.assign(table_columns, await go(QUERY `
+  Object.assign(table_columns,
+    await go(QUERY `
     SELECT table_name, column_name 
     FROM information_schema.columns 
     WHERE 
@@ -486,8 +540,15 @@ export async function CONNECT(connection) {
           tableowner=${connection.user} ORDER BY tablename
       );`,
     group_by((v) => v.table_name),
-    map(v => pluck('column_name', v))
-  ));
+    map(v => pluck('column_name', v))),
+    await go(QUERY `
+      SELECT * 
+      FROM INFORMATION_SCHEMA.view_column_usage
+      WHERE view_catalog=${connection.database}
+      ;`,
+    group_by((v) => v.view_name),
+    map(v => pluck('column_name', v)))
+  );
   return {
     VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL,
 
