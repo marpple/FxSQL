@@ -526,14 +526,14 @@ export async function CONNECT(connection) {
           SELECT tablename 
           FROM pg_tables
           WHERE 
-            tableowner=${connection.user} ORDER BY tablename
+            tableowner=${connection.user || process.env.PGUSER} ORDER BY tablename
         );`,
     group_by((v) => v.table_name),
     map(v => pluck('column_name', v))),
     await go(QUERY `
       SELECT * 
       FROM INFORMATION_SCHEMA.view_column_usage
-      WHERE view_catalog=${connection.database}
+      WHERE view_catalog=${connection.database || process.env.PGDATABASE}
       ;`,
     group_by((v) => v.view_name),
     map(v => pluck('column_name', v)))
