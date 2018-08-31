@@ -71,7 +71,7 @@ const users = await QUERY `SELECT * FROM users WHERE ${NOT_IN('id', [2, 4])} LIM
 ```javascript
 const post = { user_id: 10, body: 'hoho' };
 await QUERY `
-  INSERT INTO posts ${post}
+  INSERT INTO posts ${VALUES(post)}
 `;
 // INSERT INTO posts ("user_id", "body") VALUES (10, 'hohoho')
 
@@ -314,7 +314,7 @@ const { TRANSACTION } = POOL;
 const { QUERY, COMMIT, ROLLBACK } = await TRANSACTION();
 
 await QUERY `
-  INSERT INTO posts ${post}
+  INSERT INTO posts ${VALUES(post)}
 `;
 await QUERY `
   UPDATE posts ${SET({ body: 'yo!', updated_at: new Date() })} WHERE id = ${post.id}
