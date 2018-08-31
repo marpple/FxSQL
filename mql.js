@@ -30,14 +30,16 @@ const cmap = curry((f, arr) => Promise.all(arr.map(f)));
 const add_column = me =>
   me.column == '*' ?
     COLUMN(me.as + '.*') :
-    COLUMN(...go(
-      me.column.originals.concat(pluck('left_key', me.rels)),
-      map(c => me.as + '.' + c),
-      uniq));
+    is_column(me.column) ?
+      COLUMN(...go(
+        me.column.originals.concat(pluck('left_key', me.rels)),
+        map(c => me.as + '.' + c),
+        uniq)) :
+      tag(SymbolColumn);
 
 const to_qq = () => '??';
 const escape_dq = value => ('' + value).replace(/\\/g, "\\\\").replace(/"/g, '""');
-const dq = str => str.split('.').map(s => s == '*' ? s : `"${escape_dq(s)}"`).join(".");
+const dq = str => ('' + str).split('.').map(s => s == '*' ? s : `"${escape_dq(s)}"`).join(".");
 const columnize = v =>
   v == '*' ?
     '*' :
@@ -77,11 +79,9 @@ function ready_sqls(strs, tails) {
     go(
       tails,
       map(tail =>
-        is_string(tail) ?
-          { query: tag({ text: tail }) } :
-          is_function(tail) ?
-            { query: tail } :
-            Object.assign({}, tail, { query: tail.query || tag({ text: '' }) })
+        is_tag(tail) ?
+          { query: tail } :
+          Object.assign({}, tail, { query: tail.query || tag() })
       ),
       Object.entries,
       each(([i, t]) => go(
