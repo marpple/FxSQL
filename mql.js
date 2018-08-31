@@ -25,8 +25,8 @@ const mix = (arr1, arr2) => arr1.reduce((res, item, i) => {
   return res;
 }, []);
 
-const initial = function (ary, n, guard) {
-  return Array.prototype.slice.call(ary, 0, Math.max(0, ary.length - (n == null || guard ? 1 : n)));
+const initial = function(arr, n, guard) {
+  return Array.prototype.slice.call(arr, 0, Math.max(0, arr.length - (n == null || guard ? 1 : n)));
 };
 
 const cmap = curry((f, arr) => Promise.all(arr.map(f)));
@@ -92,7 +92,7 @@ function ready_sqls(strs, tails) {
           { query: tag({ text: tail }) } :
           is_function(tail) ?
             { query: tail } :
-            Object.assign(tail, { query: tail.query || tag({ text: '' }) })
+            Object.assign({}, tail, { query: tail.query || tag({ text: '' }) })
       ),
       Object.entries,
       each(([i, t]) => go(
@@ -149,22 +149,17 @@ export function VALUES(values) {
       .map(v => Object.values(v));
 
     return {
-      text: `
-          (${COLUMN(...columns)().text}) 
-        VALUES 
-          (${
-          values
-            .map(v => v.map(v => v == SymbolDefault ? 'DEFAULT' : to_qq()).join(', '))
-            .join('), (')})`,
+      text: `(${COLUMN(...columns)().text}) VALUES (${
+        values
+          .map(v => v.map(v => v == SymbolDefault ? 'DEFAULT' : to_qq()).join(', '))
+          .join('), (')})`,
       values: flatten(values.map(v => v.filter(v => v != SymbolDefault)))
     }
   });
 }
 
-function tag(f) {
-  return typeof f == 'function' ?
-    Object.assign(f, { [SymbolTag]: true }) : tag(function() { return f; });
-}
+const tag = f => typeof f == 'function' ?
+  Object.assign(f, { [SymbolTag]: true }) : tag(_ => f);
 
 export function COLUMN(...originals) {
   return Object.assign(tag(function() {
@@ -172,20 +167,17 @@ export function COLUMN(...originals) {
       text: originals
         .map(v =>
           is_string(v) ?
-            columnize(v)
-          :
-            Object
-              .entries(v)
-              .map(v => v.map(dq).join(' AS '))
-              .join(', '))
+            columnize(v) :
+          Object
+            .entries(v)
+            .map(v => v.map(dq).join(' AS '))
+            .join(', '))
         .join(', ')
     };
   }), { [SymbolColumn]: true, originals: originals });
 }
 
-export const CL = COLUMN,
-  TABLE = COLUMN,
-  TB = TABLE;
+export const CL = COLUMN, TABLE = COLUMN, TB = TABLE;
 
 function PARAMS(obj, sep) {
   return tag(function() {
@@ -295,7 +287,6 @@ function baseAssociate(QUERY) {
               ['_#_xtable_#_.' + (me.xkey || me.table.substr(0, me.table.length-1) + '_id')]: COLUMN(me.as + '.' + (me.key || 'id'))
             })}`;
           }
-
           me.poly_type = me.is_poly ?
             SQL `AND ${EQ(
               (me.poly_type && typeof me.poly_type == 'object') ? me.poly_type : { attached_type: me.poly_type || left.table }
@@ -312,10 +303,6 @@ function baseAssociate(QUERY) {
         return go(
           [lefts, me],
           function recur([lefts, option]) {
-            // each(function(left) {
-            //   left._ = left._ || {};
-            // }, lefts);
-
             return lefts.length && option.rels.length && go(option.rels, cmap(async function(me) {
               const query = me.query();
               if (query && query.text) query.text = 'AND ' + query.text.replace(/WHERE|AND/i, '');
@@ -427,7 +414,6 @@ function ljoin(QUERY) {
       }
     );
   };
-
 }
 
 function make_join_group(join_group, left_joins) {
@@ -513,7 +499,6 @@ export async function CONNECT(connection) {
   const pool = new Pool(connection);
   const pool_query = pool.query.bind(pool);
 
-  var i = 0;
   function base_query(excute_query, texts, values) {
     return go(
       _SQL(texts, values),
@@ -531,17 +516,18 @@ export async function CONNECT(connection) {
   async function QUERY(texts, ...values) {
     return base_query(pool_query, texts, values);
   }
-  Object.assign(table_columns,
-    await go(QUERY `
-    SELECT table_name, column_name 
-    FROM information_schema.columns 
-    WHERE 
-      table_name in (
-        SELECT tablename 
-        FROM pg_tables
-        WHERE 
-          tableowner=${connection.user} ORDER BY tablename
-      );`,
+
+  Object.assign(table_columns, await go(
+    QUERY `
+      SELECT table_name, column_name 
+      FROM information_schema.columns 
+      WHERE 
+        table_name in (
+          SELECT tablename 
+          FROM pg_tables
+          WHERE 
+            tableowner=${connection.user} ORDER BY tablename
+        );`,
     group_by((v) => v.table_name),
     map(v => pluck('column_name', v))),
     await go(QUERY `
@@ -552,6 +538,7 @@ export async function CONNECT(connection) {
     group_by((v) => v.view_name),
     map(v => pluck('column_name', v)))
   );
+
   return {
     VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL,
 
