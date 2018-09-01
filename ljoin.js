@@ -5,7 +5,7 @@ import {
 
 export default async function load_ljoin({
   ready_sqls, add_column, tag, MQL_DEBUG,
-  connection, QUERY, VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL, SQLS
+  connection_info, QUERY, VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL, SQLS
 }) {
 
   MQL_DEBUG.LOG = true;
@@ -32,14 +32,14 @@ export default async function load_ljoin({
           SELECT tablename 
           FROM pg_tables
           WHERE 
-            tableowner=${connection.user || process.env.PGUSER} ORDER BY tablename
+            tableowner=${connection_info.user || process.env.PGUSER} ORDER BY tablename
         );`,
     group_by((v) => v.table_name),
     map(v => pluck('column_name', v))),
     await go(QUERY `
       SELECT * 
       FROM INFORMATION_SCHEMA.view_column_usage
-      WHERE view_catalog=${connection.database || process.env.PGDATABASE}
+      WHERE view_catalog=${connection_info.database || process.env.PGDATABASE}
       ;`,
     group_by((v) => v.view_name),
     map(v => pluck('column_name', v)))
