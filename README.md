@@ -49,8 +49,7 @@ const POOL = await CONNECT({
   host: 'localhost',
   user: 'username',
   password: '1234',
-  database: 'dbname',
-  charset: 'utf8'
+  database: 'dbname'
 });
 ```
 
@@ -162,15 +161,18 @@ await QUERY `
 /*
 * users
 *  - id
+*  - name
 *
 * posts
 *  - id
 *  - user_id
-*  - is_hidden
-*
+*  - body
+
 * comments
+*  - id
+*  - user_id
 *  - post_id
-*  - is_hidden
+*  - body
 * */
 
 const { ASSOCIATE } = POOL;
@@ -285,7 +287,7 @@ ASSOCIATE `
 * */
 
 ASSOCIATE `
-  posts ${SQL `ORDER BY id DESC LIMIT ${10}`}
+  posts ${SQL `WHERE is_hidden = false ORDER BY id DESC LIMIT ${10}`}
     - user
     < comments ${{
       column: COLUMN('body', 'updated_at')
