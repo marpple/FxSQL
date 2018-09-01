@@ -1,4 +1,4 @@
-# MQL - Node.js PostgreSQL 쿼리 빌더
+# MQL - Node.js 데이터베이스 쿼리 빌더
 
 ## 특징
  - INSERT, UPDATE, WHERE 절 등에 필요한 복잡한 쿼리를 자바스크립트 객체를 통해 쉽게 생성할 수 있습니다.
@@ -9,6 +9,28 @@
  - Associations을 위해 모델을 미리 구성해둘 필요가 없습니다.
  - Transaction을 사용하기 쉽습니다.
  - 인자와 결과 값을 자바스크립트의 기본 값으로만(object, array, string, number, true, false, null) 구성하여, 조합성이 높고 JSON 변환 비용이 없습니다.
+ - PostgreSQL, MySQL 지원
+
+## 목차
+  - (설치)[#설치]
+  - (연결)[#연결]
+    - (PostgreSQL)[#PostgreSQL]
+    - (MySQL)[#MySQL]
+  - (간단한 쿼리)[#간단한 쿼리]
+  - (함수 불러오기)[#함수 불러오기]
+  - (지원하는 헬퍼 함수)[#지원하는 헬퍼 함수]
+    - (EQ)[#EQ]
+    - (IN)[#IN]
+    - (NOT_IN)[#NOT_IN]
+    - (VALUES)[#VALUES]
+    - (SET)[#SET]
+  - (Associations)[#Associations]
+    - (기본)[#기본]
+    - (Polymorphic)[#Polymorphic]
+    - (Transaction)[#Transaction]
+    - (Many to many)[#Many to many]
+  - (옵션)[#옵션]
+  - (DEBUG)[#DEBUG]
 
 ## 설치
 
