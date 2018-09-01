@@ -38,7 +38,7 @@ const posts = await QUERY `SELECT * FROM posts WHERE id = ${id}`;
 // [{ id: 10, ... }]
 ```
 
-`CONNECT`를 통해 얻은 객체를 통해 얻은 `QUERY`는 connection pool을 이용합니다.
+`CONNECT`를 통해 얻은 `QUERY`는 connection pool을 이용합니다.
 
 ## 지원하는 tags
 
@@ -322,7 +322,7 @@ await QUERY `
 await ROLLBACK();
 ```
 
-`TRANSACTION`을 통해 얻은 객체를 통해 얻은 `QUERY`는 하나의 connection을 이용합니다. `ROLLBACK`이나 `COMMIT`후에는 위에서 만든 QUERY 함수는 더이상 사용할 수 없습니다.
+`TRANSACTION`을 통해 얻은 `QUERY`는 하나의 connection을 이용합니다. `ROLLBACK`이나 `COMMIT`을 하고나면 앞서 함께 얻었던 `QUERY` 함수의 커넥션은 해제되고 더이상 사용할 수 없습니다.
 
 ## DEBUG
 
