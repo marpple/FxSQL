@@ -12,25 +12,25 @@
  - PostgreSQL, MySQL 지원
 
 ## 목차
-  - (설치)[#설치]
-  - (연결)[#연결]
-    - (PostgreSQL)[#PostgreSQL]
-    - (MySQL)[#MySQL]
-  - (간단한 쿼리)[#간단한 쿼리]
-  - (함수 불러오기)[#함수 불러오기]
-  - (지원하는 헬퍼 함수)[#지원하는 헬퍼 함수]
-    - (EQ)[#EQ]
-    - (IN)[#IN]
-    - (NOT_IN)[#NOT_IN]
-    - (VALUES)[#VALUES]
-    - (SET)[#SET]
-  - (Associations)[#Associations]
-    - (기본)[#기본]
-    - (Polymorphic)[#Polymorphic]
-    - (Transaction)[#Transaction]
-    - (Many to many)[#Many to many]
-  - (옵션)[#옵션]
-  - (DEBUG)[#DEBUG]
+  - [설치](#설치)
+  - [연결](#연결)
+    - [PostgreSQL](#PostgreSQL)
+    - [MySQL](#MySQL)
+  - [간단한 쿼리](#간단한 쿼리)
+  - [함수 불러오기](#함수 불러오기)
+  - [지원하는 헬퍼 함수](#지원하는 헬퍼 함수)
+    - [EQ](#EQ)
+    - [IN](#IN)
+    - [NOT_IN](#NOT_IN)
+    - [VALUES](#VALUES)
+    - [SET](#SET)
+  - [Associations](#Associations)
+    - [기본](#기본)
+    - [Polymorphic](#Polymorphic)
+    - [Transaction](#Transaction)
+    - [Many to many](#Many to many)
+  - [옵션](#옵션)
+  - [DEBUG](#DEBUG)
 
 ## 설치
 
