@@ -18,8 +18,11 @@ npm i mql2
 
 ## 연결
 
+### PostgreSQL
+
 ```javascript
-const { CONNECT } = require('mql2');
+const { PostgreSQL } = require('mql2');
+const { CONNECT } = PostgreSQL;
 const POOL = await CONNECT({
   host: 'localhost',
   user: 'username',
@@ -28,6 +31,27 @@ const POOL = await CONNECT({
   charset: 'utf8'
 });
 ```
+
+### PostgreSQL Connection 옵션
+
+MQL은 내부적으로 node-postgres를 사용합니다. `CONNECT` 함수에 사용되는 옵션은 node-postgres와 동일합니다. [디비 연결](https://node-postgres.com/features/connecting)이나 [커넥션 풀](https://node-postgres.com/api/pool)과 관련된 자세한 옵션은 [node-postgres](https://node-postgres.com/) 사이트에서 확인할 수 있습니다.
+
+### MySQL
+
+```javascript
+const { MySQL } = require('mql2');
+const { CONNECT } = MySQL;
+const POOL = await CONNECT({
+  host: 'localhost',
+  user: 'username',
+  password: '1234',
+  database: 'dbname'
+});
+```
+
+### MySQL Connection 옵션
+
+MQL은 내부적으로 mysql를 사용합니다. `CONNECT` 함수에 사용되는 옵션은 mysql과 동일합니다. [디비 연결](https://github.com/mysqljs/mysql#connection-options)이나 [커넥션 풀](https://github.com/mysqljs/mysql#pool-options)과 관련된 자세한 옵션은 [mysql](https://github.com/mysqljs/mysql) 사이트에서 확인할 수 있습니다.
 
 ## 간단한 쿼리
 
@@ -40,7 +64,20 @@ const posts = await QUERY `SELECT * FROM posts WHERE id = ${id}`;
 
 `CONNECT`를 통해 얻은 `QUERY`는 connection pool을 이용합니다.
 
-## 지원하는 tags
+## 함수 불러오기
+
+```javascript
+const POOL = await CONNECT();
+const = {
+  VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL, MQL_DEBUG,
+  QUERY,
+  ASSOCIATE,
+  LJOIN,
+  TRANSACTION
+} = POOL;
+```
+
+## 지원하는 헬퍼 함수
 
 ### EQ
 
@@ -302,7 +339,8 @@ const posts = await ASSOCIATE `
 ## Transaction
 
 ```javascript
-const { CONNECT } = require('mql2');
+const { PostgreSQL } = require('mql2');
+const { CONNECT } = PostgreSQL;
 const POOL = await CONNECT({
   host: 'localhost',
   user: 'username',
@@ -329,15 +367,9 @@ await ROLLBACK();
 `MQL_DEBUG.LOG`를 `true`로 설정한 후 `QUERY`를 실행하면 콘솔에 DB로 보낸 쿼리들을 출력합니다.
 
 ```javascript
-const { MQL_DEBUG } = require('mql2');
-
 MQL_DEBUG.LOG = true;
 QUERY `SELECT ${"hi~"} as ho`;
 
 // { text: 'SELECT $1 as ho', values: ['hi'] }
 ```
-
-## Connection Pool 옵션
-
-MQL은 내부적으로 node-postgres를 사용합니다. `CONNECT` 함수에 사용되는 옵션은 node-postgres와 동일합니다. [디비 연결](https://node-postgres.com/features/connecting)이나 [커넥션 풀](https://node-postgres.com/api/pool)과 관련된 자세한 옵션은 [node-postgres](https://node-postgres.com/) 사이트에서 확인할 수 있습니다.
 
