@@ -24,8 +24,8 @@
     - [NOT_IN](#not_in)
     - [VALUES](#values)
     - [SET](#set)
-    - [COLUMN, CL](#column,-cl)
-    - [TABLE, TB](#table,-tb)
+    - [COLUMN, CL](#column-cl)
+    - [TABLE, TB](#table-tb)
   - [Associations](#associations)
     - [기본](#기본)
     - [Polymorphic](#polymorphic)
@@ -164,8 +164,8 @@ await QUERY `
       ...
 `;
 // SELECT
-     '"id", "bb" AS "cc", "t2"."name", "t2"."name" AS "name2", "a" AS "c", "t3"."a" AS "d"
-       ...
+//   "id", "bb" AS "cc", "t2"."name", "t2"."name" AS "name2", "a" AS "c", "t3"."a" AS "d"
+//     ...
 ```
 
 ### TABLE, TB
@@ -179,8 +179,8 @@ await QUERY `
     FROM TABLE('t1'), TABLE('tt as t2')
 `;
 // SELECT
-     ...
-     FROM "t1", "tt" AS "t2"
+//   ...
+//   FROM "t1", "tt" AS "t2"
 ```
 
 ## Associations
