@@ -88,7 +88,7 @@ const posts = await QUERY `SELECT * FROM posts WHERE id = ${id}`;
 // [{ id: 10, ... }]
 ```
 
-## 서브 쿼리, 조인 쿼리
+## 서브 쿼리, 조인
 
 ```javascript
 const type = 'TYPE1';
