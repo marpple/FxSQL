@@ -31,6 +31,7 @@
     - [Polymorphic](#polymorphic)
     - [Transaction](#transaction)
     - [Many to many](#many-to-many)
+    - [Hook](#hook)
   - [옵션](#옵션)
   - [DEBUG](#debug)
 
@@ -391,6 +392,27 @@ const posts = await ASSOCIATE `
 ```
 
 위와 같이 데이터베이스의 테이블명과 사용하고자하는 이름이 다르거나, `ASSOCIATE`가 자동생성하는 컬럼명 등과 실제 데이터베이스의 상태가 다를 경우 옵션을 이용하여 맞춰줄 수 있습니다. 그러나 대부분의 경우는 데이터베이스의 VIEW를 사용하는 것이 코드 관리에 좋습니다.
+
+### Hook
+
+`hook`을 이용하여 가상 컬럼이나, 정렬, 필터 등의 추가 작업을 할 수 있습니다. 자신의 안쪽 데이터들이 모두 불려진 후 실행되어 활용하기 좋습니다.
+
+```javascript
+const users = await ASSOCIATE `
+  users ${{hook: users => users.map(u =>
+    Object.assign({}, u, { _popular: !!u._.posts.find(p => p._is_best) })
+  )}}
+    < posts ${{hook: posts => posts.map(
+      p => Object.assign({}, p, { _is_best: p._.comments.length > 1 }))}}
+      - user
+      < comments
+       - user
+`;
+
+users[0]._popular; // true
+users[0]._.posts[0]._is_best; // true
+users[0]._.posts[1]._is_best; // false
+```
 
 ## Transaction
 

@@ -335,10 +335,11 @@ function BASE({
                     left._ = left._ || {};
                     left._[me.as] = folded[left[me.left_key]] || default_value();
                   }, lefts),
-                  () => recur([rights, me]));
+                  _ => recur([rights, me]),
+                  _ => me.hook && each(left => left._[me.as] = me.hook(left._[me.as]), lefts));
               }));
             },
-            _ => lefts
+            _ => me.hook ? me.hook(lefts) : lefts
           );
         }
       );
