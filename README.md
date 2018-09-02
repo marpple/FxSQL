@@ -24,6 +24,8 @@
     - [NOT_IN](#not_in)
     - [VALUES](#values)
     - [SET](#set)
+    - [COLUMN, CL](#column,-cl)
+    - [TABLE, TB](#table,-tb)
   - [Associations](#associations)
     - [기본](#기본)
     - [Polymorphic](#polymorphic)
@@ -149,6 +151,36 @@ await QUERY `
   UPDATE posts ${SET({ body: 'yo!', updated_at: new Date() })} WHERE id = ${post.id}
 `;
 // UPDATE posts SET "body" = 'yo!', "updated_at" = '2018-08-28T23:18:13.263Z' WHERE id = 10
+```
+
+### COLUMN, CL
+
+```javascript
+COLUMN == CL; // true
+
+await QUERY `
+  SELECT
+    COLUMN('id', 'bb as cc', 't2.name', 't2.name as name2', { a: 'c' }, { 't3.a': 'd' })
+      ...
+`;
+// SELECT
+     '"id", "bb" AS "cc", "t2"."name", "t2"."name" AS "name2", "a" AS "c", "t3"."a" AS "d"
+       ...
+```
+
+### TABLE, TB
+
+```javascript
+TABLE == TB; // true
+
+await QUERY `
+  SELECT
+    ...
+    FROM TABLE('t1'), TABLE('tt as t2')
+`;
+// SELECT
+     ...
+     FROM "t1", "tt" AS "t2"
 ```
 
 ## Associations
