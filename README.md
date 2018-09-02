@@ -2,7 +2,7 @@
 
 ## 특징
  - INSERT, UPDATE, WHERE 절 등에 필요한 복잡한 쿼리를 자바스크립트 객체를 통해 쉽게 생성할 수 있습니다.
- - 일반적인 SQL 문법을 유지할 수 있어, 서브 쿼리, 조인 쿼리 등을 쉽게 작성할 수 있습니다.
+ - 일반적인 SQL 문법을 유지할 수 있어, 서브 쿼리, 조인 등을 쉽게 작성할 수 있습니다.
  - SQL을 세밀하게 튜닝하고 발전시키기 쉽습니다.
  - 각 데이터베이스에서 지원하는 다양한 최신 Operator 들을 쉽게 사용할 수 있습니다.
    - (예. https://www.postgresql.org/docs/current/static/functions-json.html)
@@ -18,6 +18,7 @@
     - [PostgreSQL](#postgresql)
     - [MySQL](#mysql)
   - [간단한 쿼리](#간단한-쿼리)
+  - [서브 쿼리, 조인](#서브-쿼리-조인)
   - [함수 불러오기](#함수-불러오기)
   - [지원하는 헬퍼 함수](#지원하는-헬퍼-함수)
     - [EQ](#eq)
@@ -85,7 +86,11 @@ const { QUERY } = POOL;
 const id = 10;
 const posts = await QUERY `SELECT * FROM posts WHERE id = ${id}`;
 // [{ id: 10, ... }]
+```
 
+## 서브 쿼리, 조인 쿼리
+
+```javascript
 const type = 'TYPE1';
 const limit = 10;
 
@@ -99,12 +104,13 @@ const status = 'STATUS1';
 
 QUERY `
   SELECT *
-    FROM table1 as t1, table2 as t2
-    WHERE t1.id = t2.table1_id and t1.status = ${status}
+    FROM table1 AS t1, table2 AS t2
+    WHERE t1.id = t2.table1_id AND t1.status = ${status}
     ORDER BY id DESC
     LIMIT 10
 `;
 ```
+
 
 `CONNECT`를 통해 얻은 `QUERY`는 connection pool을 이용합니다.
 
