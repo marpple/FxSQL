@@ -4,7 +4,7 @@
  - INSERT, UPDATE, WHERE 절 등에 필요한 복잡한 쿼리를 자바스크립트 객체를 통해 쉽게 생성할 수 있습니다.
  - 일반적인 SQL 문법을 유지할 수 있어, 서브 쿼리, 조인 쿼리 등을 쉽게 작성할 수 있습니다.
  - SQL을 세밀하게 튜닝하고 발전시키기 쉽습니다.
- - 각 데이터베이스의 최신의 다양한 Operator 들을 쉽게 사용할 수 있습니다.
+ - 각 데이터베이스에서 지원하는 다양한 최신 Operator 들을 쉽게 사용할 수 있습니다.
    - (예. https://www.postgresql.org/docs/current/static/functions-json.html)
  - SQL Injection 공격이 불가능합니다.
  - Associations을 위해 모델을 미리 구성해둘 필요가 없습니다.
