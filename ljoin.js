@@ -7,9 +7,6 @@ export default async function load_ljoin({
   ready_sqls, add_column, tag, MQL_DEBUG,
   connection_info, QUERY, VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL, SQLS
 }) {
-
-  MQL_DEBUG.LOG = true;
-
   const table_columns = {};
 
   const add_as_join = (me, as) =>
