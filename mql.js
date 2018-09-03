@@ -358,7 +358,7 @@ function BASE({
         tap(function(query) {
           if (MQL_DEBUG.DUMP) dump(query);
           typeof MQL_DEBUG.LOG == 'function' ?
-            MQL_DEBUG.LOG(query) : MQL_DEBUG.LOG && console.log(query);
+            MQL_DEBUG.LOG(query) : (MQL_DEBUG.LOG && console.log(query));
         }),
         excute_query);
     }
