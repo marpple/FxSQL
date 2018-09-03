@@ -3,7 +3,6 @@
 ## 특징
  - 함수와 자바스크립트의 기본 값을 이용한 쿼리 생성
  - Promise 지원
- - 자바스크립트의 값을 이용한 쿼리 생성
  - SQL 문법 사용
  - 각 데이터베이스에서 지원하는 다양한 최신 Operator 사용 가능
    - (예. https://www.postgresql.org/docs/current/static/functions-json.html)
