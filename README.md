@@ -1,15 +1,16 @@
 # MQL - Node.js 데이터베이스 쿼리 빌더
 
 ## 특징
- - INSERT, UPDATE, WHERE 절 등에 필요한 복잡한 쿼리를 자바스크립트 객체를 통해 쉽게 생성할 수 있습니다.
- - 일반적인 SQL 문법을 유지할 수 있어, 서브 쿼리, 조인 등을 쉽게 작성할 수 있습니다.
- - SQL을 세밀하게 튜닝하고 발전시키기 쉽습니다.
- - 각 데이터베이스에서 지원하는 다양한 최신 Operator 들을 쉽게 사용할 수 있습니다.
+ - 함수와 자바스크립트의 기본 값을 이용한 쿼리 생성
+ - Promise 지원
+ - 자바스크립트의 값을 이용한 쿼리 생성
+ - SQL 문법 사용
+ - 각 데이터베이스에서 지원하는 다양한 최신 Operator 사용 가능
    - (예. https://www.postgresql.org/docs/current/static/functions-json.html)
- - SQL Injection 공격이 불가능합니다.
- - Associations을 위해 모델을 미리 구성해둘 필요가 없습니다.
- - Transaction을 사용하기 쉽습니다.
- - 인자와 결과 값을 자바스크립트의 기본 값으로만(object, array, string, number, true, false, null) 구성하여, 조합성이 높고 JSON 변환 비용이 없습니다.
+ - SQL Injection 공격 불가능
+ - 클래스와 모델이 필요 없는 Associations
+ - 간결한 Transaction API
+ - JSON 변환 비용 없음
  - PostgreSQL, MySQL 지원
 
 ## 목차
@@ -306,8 +307,7 @@ authors[0]._.books[0].name; // 책 이름
 
 ```javascript
 /*
-* 테이블명과 컬럼명이 이미 MQL 포맷과 동일하거나 ViEW 등을 이용해 잘 맞춰놨을 때에는
-* ASSOCIATE에게 넘긴 문자열들을 기반으로 자동으로 테이블명과 컬럼명들을 적절히 생성합니다.
+* 아래와 같이 테이블이 구성되어있다면 ASSOCIATE에서 쿼리에 필요한 테이블명과 컬럼명등을 자동으로 적절히 생성합니다.
 * users
 *  - id
 * posts
@@ -341,8 +341,8 @@ ASSOCIATE `
 `;
 
 /*
-* 위 상황에서 컬럼들을 최소화해서 가져오고 싶거나 쿼리를 추가하고 싶다면 아래와 같이할 수 있습니다.
-* column에 기본키나 외래키 등을 포함시키지 않아도 적절히 ASSOCIATE 내부에서 추가하여 적절히 가져옵니다.
+* 아래와 같이 컬럼을 지정하거나 조건을 추가할 수 있습니다.
+* 컬럼을 지정할 때 기본키나 외래키 등을 포함시키지 않아도 ASSOCIATE 내부에서 추가하여 적절히 가져옵니다.
 * */
 
 ASSOCIATE `
@@ -361,7 +361,7 @@ ASSOCIATE `
 
 
 /*
-* 만일 테이블이 아래와 같다면 옵션을 통해 매칭을 시켜주면 됩니다.
+* 만일 테이블명과 컬럼명이 ASSOCIATE 규칙에 맞지 않다면 옵션을 통해 매칭을 시켜주세요.
 * members
 *  - member_id
 * articles
@@ -399,11 +399,11 @@ const posts = await ASSOCIATE `
         key: 'member_id', // members 테이블이 가진 키
         table: 'members' // user의 테이블 명
       }}
-      p < likes ${{ // p < 를 이용해 하나의 likes 테이블을 통해 comments와 posts의 likes를 구현
+      p < likes ${{ // 하나의 likes 테이블을 통해 comments와 posts의 likes를 구현
         poly_type: { parent_name: 'comments' },
         key: 'parent_id'
       }}
-    p < likes ${{ // p < 를 이용해 하나의 likes 테이블을 통해 comments와 posts의 likes를 구현
+    p < likes ${{ // 하나의 likes 테이블을 통해 comments와 posts의 likes를 구현
       poly_type: { parent_name: 'articles' },
       key: 'parent_id'
     }}
@@ -417,11 +417,9 @@ const posts = await ASSOCIATE `
 `;
 ```
 
-위와 같이 데이터베이스의 테이블명과 사용하고자하는 이름이 다르거나, `ASSOCIATE`가 자동생성하는 컬럼명 등과 실제 데이터베이스의 상태가 다를 경우 옵션을 이용하여 맞춰줄 수 있습니다. 그러나 대부분의 경우는 데이터베이스의 VIEW를 사용하는 것이 코드 관리에 좋습니다.
-
 ### Hook
 
-`hook`을 이용하여 가상 컬럼이나, 정렬, 필터 등의 추가 작업을 할 수 있습니다. 자신의 안쪽 데이터들이 모두 불려진 후 실행되어 활용하기 좋습니다.
+`hook`을 이용하여 가상 컬럼을 추가하거나 정렬이나 필터링을 할 수 있습니다. 자신의 안쪽 데이터들이 모두 불려진 후 실행되어 활용하기 좋습니다.
 
 ```javascript
 const users = await ASSOCIATE `
