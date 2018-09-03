@@ -1,6 +1,6 @@
 {
   "name": "mql2",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "query builder",
   "main": "index.js",
   "scripts": {
@@ -12,6 +12,7 @@
   },
   "files": [
     "mql.js",
+    "ljoin.js",
     "index.js",
     "LICENSE",
     "README.md"
