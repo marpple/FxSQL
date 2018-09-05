@@ -2,27 +2,29 @@
 
 [EN](https://github.com/marpple/MQL) | [KR](https://github.com/marpple/MQL/blob/master/README_kr.md)
 
-## 특징
- - 함수와 자바스크립트의 기본 값을 이용한 쿼리 생성
- - Promise 지원
- - SQL 문법 사용
- - 각 데이터베이스에서 지원하는 다양한 최신 Operator 사용 가능
-   - (예. https://www.postgresql.org/docs/current/static/functions-json.html)
- - SQL Injection 공격 불가능
- - 클래스와 모델이 필요 없는 Associations
- - 간결한 Transaction API
- - JSON 변환 비용 없음
- - PostgreSQL, MySQL 지원
+## Features
+ - Tagged template literal
+ - No models.
+ - Only need functions and javascript data types.
+ - Promises
+ - No cost for converting to JSON.
+ - More freedom in using SQL syntax.
+ - Preventing SQL-injection attacks.
+ - Easy to use the latest operators provided in databases.
+ - Simple transaction API.
+ - No models for Associations.
+ - Designed to work well with PostgreSQL, MySQL.
 
-## 목차
-  - [설치](#설치)
-  - [연결](#연결)
+
+## Overview
+  - [Installation](#Installation)
+  - [Connect](#Connect)
     - [PostgreSQL](#postgresql)
     - [MySQL](#mysql)
-  - [간단한 쿼리](#간단한-쿼리)
-  - [서브 쿼리, 조인](#서브-쿼리-조인)
-  - [함수 불러오기](#함수-불러오기)
-  - [지원하는 헬퍼 함수](#지원하는-헬퍼-함수)
+  - [Simple query](#Simple-query)
+  - [Subquery, Join](#Subquery-Join)
+  - [Ready to be used](#Ready-to-be-used)
+  - [Helper Function](#Helper-Function)
     - [EQ](#eq)
     - [IN](#in)
     - [NOT_IN](#not_in)
@@ -31,21 +33,21 @@
     - [COLUMN, CL](#column-cl)
     - [TABLE, TB](#table-tb)
   - [Associations](#associations)
-    - [기본](#기본)
+    - [Common use](#Common-use)
     - [Polymorphic](#polymorphic)
     - [Transaction](#transaction)
     - [Many to many](#many-to-many)
     - [Hook](#hook)
-  - [옵션](#옵션)
+  - [Option](#Option)
   - [DEBUG](#debug)
 
-## 설치
+## Installation
 
 ```
 npm i mql2
 ```
 
-## 연결
+## Connect
 
 ### PostgreSQL
 
@@ -60,9 +62,9 @@ const POOL = await CONNECT({
 });
 ```
 
-### PostgreSQL Connection 옵션
+### PostgreSQL Connection option
 
-MQL은 내부적으로 node-postgres를 사용합니다. `CONNECT` 함수에 사용되는 옵션은 node-postgres와 동일합니다. [디비 연결](https://node-postgres.com/features/connecting)이나 [커넥션 풀](https://node-postgres.com/api/pool)과 관련된 자세한 옵션은 [node-postgres](https://node-postgres.com/) 사이트에서 확인할 수 있습니다.
+MQL is built on node-postgres. The parameter of CONNECT function is the same as node-postgres’. You can read the detail of [connection pool](https://node-postgres.com/api/pool) or [connecting to DB](https://node-postgres.com/features/connecting) on [node-postgres’ site](https://node-postgres.com/).
 
 ### MySQL
 
@@ -77,11 +79,11 @@ const POOL = await CONNECT({
 });
 ```
 
-### MySQL Connection 옵션
+### MySQL Connection option
 
-MQL은 내부적으로 mysql를 사용합니다. `CONNECT` 함수에 사용되는 옵션은 mysql과 동일합니다. [디비 연결](https://github.com/mysqljs/mysql#connection-options)이나 [커넥션 풀](https://github.com/mysqljs/mysql#pool-options)과 관련된 자세한 옵션은 [mysql](https://github.com/mysqljs/mysql) 사이트에서 확인할 수 있습니다.
+MQL is built on node-postgres. The parameter of CONNECT function is the same as the MySQL’. You can read the detail of [connection pool](https://github.com/mysqljs/mysql#pool-options) or [connecting to DB](https://github.com/mysqljs/mysql#connection-options) on [MySQL's site](https://github.com/mysqljs/mysql).
 
-## 간단한 쿼리
+## Simple query
 
 ```javascript
 const { QUERY } = POOL;
@@ -90,7 +92,7 @@ const posts = await QUERY `SELECT * FROM posts WHERE id = ${id}`;
 // [{ id: 10, ... }]
 ```
 
-## 서브 쿼리, 조인
+## Subquery, Join
 
 ```javascript
 const type = 'TYPE1';
@@ -114,9 +116,9 @@ QUERY `
 ```
 
 
-`CONNECT`를 통해 얻은 `QUERY`는 connection pool을 이용합니다.
+QUERY achieved from CONNECT uses a connection pool.
 
-## 함수 불러오기
+## Ready to be used
 
 ```javascript
 const POOL = await CONNECT();
@@ -129,7 +131,7 @@ const = {
 } = POOL;
 ```
 
-## 지원하는 헬퍼 함수
+## Helper-Function
 
 ### EQ
 
@@ -214,9 +216,9 @@ await QUERY `
 
 ## Associations
 
-### 기본
+### Common use
 
-`ASSOCIATE`는 connection pool을 이용합니다.
+ASSOCIATE uses Connection pool.
 
 ```javascript
 /*
@@ -245,10 +247,10 @@ const posts = await ASSOCIATE `
       - user
 `;
 
-posts[0].body; // 내용
-posts[0]._.user.name // 글쓴이 이름
-posts[0]._.comments[0].body // 코멘트 내용
-posts[0]._.comments[0]._.user.name // 댓글 작성자 이름
+posts[0].body;
+posts[0]._.user.name
+posts[0]._.comments[0].body
+posts[0]._.comments[0]._.user.name
 ```
 
 ### Polymorphic
@@ -294,21 +296,21 @@ const books = await ASSOCIATE `
     x authors
 `;
 
-books[0]._.authors[0].name; // 이름
+books[0]._.authors[0].name;
 
 const authors = await ASSOCIATE `
   authors
     x books ${{ xtable: 'books_authors' }}
 `;
 
-authors[0]._.books[0].name; // 책 이름
+authors[0]._.books[0].name;
 ```
 
-### 옵션
+### Option
 
 ```javascript
 /*
-* 아래와 같이 테이블이 구성되어있다면 ASSOCIATE에서 쿼리에 필요한 테이블명과 컬럼명등을 자동으로 적절히 생성합니다.
+* If the tables are formed like the example below, the ASSOCIATE automatically creates the necessary table and column names for queries. the necessary names for the tables and columns for queries
 * users
 *  - id
 * posts
@@ -342,8 +344,8 @@ ASSOCIATE `
 `;
 
 /*
-* 아래와 같이 컬럼을 지정하거나 조건을 추가할 수 있습니다.
-* 컬럼을 지정할 때 기본키나 외래키 등을 포함시키지 않아도 ASSOCIATE 내부에서 추가하여 적절히 가져옵니다.
+* You can select columns or add conditions.
+* Even though you don’t select a foreign key or a primary key in the option like the below, they are included in ASSOCIATE.
 * */
 
 ASSOCIATE `
@@ -362,7 +364,7 @@ ASSOCIATE `
 
 
 /*
-* 만일 테이블명과 컬럼명이 ASSOCIATE 규칙에 맞지 않다면 옵션을 통해 매칭을 시켜주세요.
+* If the names of the tables and columns does not follow the ASSOCIATE rules, you need to manually insert the correct names of the tables and columns.
 * members
 *  - member_id
 * articles
@@ -418,11 +420,12 @@ const posts = await ASSOCIATE `
 `;
 ```
 
-위와 같이 옵션을 통해 매칭시켜줄 수 있지만, 데이터베이스 VIEW를 이용해 매칭하면 훨씬 간결한 코드를 유지할 수 있습니다.
+If you use VIEW in databases, it's much easier. Then, you don't need to insert all correct column and table names.
 
 ### Hook
 
-`hook`을 이용하여 가상 컬럼을 추가하거나 정렬이나 필터링을 할 수 있습니다. 자신의 안쪽 데이터들이 모두 불려진 후 실행되어 활용하기 좋습니다.
+You can add virtual columns, sorting, filtering and etc by using Hook.
+When all the datas are gathered below “posts”, Hook is executed.
 
 ```javascript
 const users = await ASSOCIATE `
@@ -465,11 +468,9 @@ await QUERY `
 await ROLLBACK();
 ```
 
-`TRANSACTION`을 통해 얻은 `QUERY`는 하나의 connection을 이용합니다. `ROLLBACK`이나 `COMMIT`을 하고나면 앞서 함께 얻었던 `QUERY` 함수의 커넥션은 해제되고 더이상 사용할 수 없습니다.
 
 ## DEBUG
 
-`MQL_DEBUG.LOG`를 `true`로 설정한 후 `QUERY`를 실행하면 콘솔에 DB로 보낸 쿼리들을 출력합니다.
 
 ```javascript
 MQL_DEBUG.LOG = true;
