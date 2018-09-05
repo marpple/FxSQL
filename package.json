@@ -10,6 +10,16 @@
     "type": "git",
     "url": "git+https://github.com/marpple/MQL.git"
   },
+  "keywords": [
+    "functional",
+    "orm",
+    "sql query builder",
+    "template literals",
+    "tagged template literals",
+    "sql injection",
+    "mysql",
+    "postgresql"
+  ],
   "files": [
     "mql.js",
     "ljoin.js",
