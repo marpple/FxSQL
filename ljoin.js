@@ -7,6 +7,8 @@ export default async function load_ljoin({
   ready_sqls, add_column, tag, MQL_DEBUG,
   connection_info, QUERY, VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL, SQLS
 }) {
+  const cmap = curry((f, arr) => Promise.all(arr.map(f)));
+
   const table_columns = {};
 
   const add_as_join = (me, as) =>
@@ -16,21 +18,17 @@ export default async function load_ljoin({
       uniq
     ));
 
-  const initial = function(arr, n, guard) {
-    return Array.prototype.slice.call(arr, 0, Math.max(0, arr.length - (n == null || guard ? 1 : n)));
-  };
-
   Object.assign(table_columns, await go(
     QUERY `
       SELECT table_name, column_name 
       FROM information_schema.columns 
-      WHERE 
+      WHERE
         table_name in (
           SELECT tablename 
           FROM pg_tables
           WHERE 
-            tableowner=${connection_info.user || process.env.PGUSER} ORDER BY tablename
-        );`,
+            tableowner=${connection_info.user || process.env.PGUSER} 
+        ) ORDER BY table_name;`,
     group_by((v) => v.table_name),
     map(v => pluck('column_name', v))),
     await go(QUERY `
@@ -41,14 +39,6 @@ export default async function load_ljoin({
     group_by((v) => v.view_name),
     map(v => pluck('column_name', v)))
   );
-
-
-  function make_join_group(join_group, left_joins) {
-    return each(join_right => {
-      join_group.push(join_right);
-      make_join_group(join_group, join_right.left_joins);
-    }, left_joins)
-  }
 
   function where_in_query(left, where_in, QUERY) {
     const colums = uniq(add_column(left).originals.concat(left.key));
@@ -63,33 +53,35 @@ export default async function load_ljoin({
   }
 
   function left_join_query(left, where_in_query, QUERY) {
-    const first_col = add_as_join(left, left.as).originals.concat(left.as + '.id' + ' AS ' + `${left.as}>_<id`);
-    if (left.key) first_col.push(left.as + '.' + left.key + ' AS ' + `${left.as}>_<${left.key}`);
+    let i = 0;
+    left.lj_as = 'lj'+ i++ + "//"+left.depth;
+    const first_col = add_as_join(left, left.lj_as).originals.concat(left.as + '.id' + ' AS ' + `${left.lj_as}>_<id`);
+    if (left.key) first_col.push(left.as + '.' + left.key + ' AS ' + `${left.lj_as}>_<${left.key}`);
     const join_columns = [first_col];
     const join_sqls = [];
     return go(
       left,
-      function recur(me, parent_as) {
+      function recur(me) {
         me.left_join_over = true;
-        parent_as = parent_as || me.as;
         each(right => {
           const query = right.query();
+          right.lj_as = 'lj'+ i++ + "//"+right.depth;
           if (query && query.text) query.text = 'AND ' + query.text.replace(/WHERE|AND/i, '');
           join_columns.push(
-            uniq(add_as_join(right, `${parent_as}>_<${right.as}`).originals
-              .concat(right.as + '.' + right.key + ' AS ' + `${right.as}>_<${right.key}`)
-              .concat(left.as + '.id' + ' AS ' + `${left.as}>_<id`))
+            uniq(add_as_join(right, right.lj_as).originals
+              .concat(right.as + '.' + right.key + ' AS ' + `${right.lj_as}>_<${right.key}`)
+              .concat(left.as + '.id' + ' AS ' + `${right.lj_as}>_<id`))
           );
           join_sqls.push(SQL `
           LEFT JOIN
            ${TB(right.table)} AS ${TB(right.as)}
             ON
             ${EQ({
-              [me.as + '.' + right.left_key]: COLUMN(right.as + '.id') 
+              [me.as + '.' + right.left_key]: COLUMN(right.as + '.' + right.key) 
             })}
             ${tag(query)}
           `);
-          recur(right, `${parent_as}>_<${right.as}`);
+          recur(right);
         }, me.left_joins);
       },
       () => {
@@ -105,19 +97,20 @@ export default async function load_ljoin({
         ${where_in_query || tag()}
         ${tag(query)}`,
       map(row => {
+        const before_result_obj = {};
         const result_obj = {};
         for (const as in row) {
           if (as.indexOf('>_<') == -1) return ;
-          let _obj = null;
           const split_as = as.split('>_<');
-          const ass = initial(split_as);
-          reduce(function(mem, key) {
-            _obj = mem[key] = mem[key] || { _: {}};
-            return mem[key]._;
-          }, ass, result_obj);
-          _obj[split_as[split_as.length-1]] = row[as];
+          var tas = split_as[0];
+          before_result_obj[tas] = before_result_obj[tas] || { _:{} };
+          before_result_obj[tas][split_as[1]] = row[as];
         }
-        for (const r_key in result_obj) return result_obj[r_key];
+        !function recur(me, memo) {
+          memo[me.as] = before_result_obj[me.lj_as];
+          each(right => recur(right, memo[me.as]._), me.left_joins);
+        }(left, result_obj);
+        return result_obj[left.as];
       })
     )
   }
@@ -150,8 +143,6 @@ export default async function load_ljoin({
             }
             left.rels.push(me);
 
-            //
-
             me.poly_type = me.is_poly ?
               SQL `AND ${EQ(
                 is_string(me.poly_type) ? { attached_type: me.poly_type || left.table } : me.poly_type
@@ -172,7 +163,7 @@ export default async function load_ljoin({
         function recur([left, results]) {
           return go(
             left.rels,
-            each(function(me) {
+            cmap(async function(me) {
               const next_result = cat(map(r => r._ ? r._[me.as] : null, results));
               const f_key_ids = uniq(filter((r) => !!r, pluck(me.left_key, results)));
               if (me.rel_type == '-' || !f_key_ids.length) return recur([me, next_result]);
