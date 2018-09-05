@@ -253,6 +253,8 @@ posts[0]._.comments[0].body
 posts[0]._.comments[0]._.user.name
 ```
 
+`-` of `- user` refers to "Belongs to", `<` of `< user` refers to "Has many".
+
 ### Polymorphic
 
 ```javascript
@@ -274,6 +276,8 @@ await ASSOCIATE `
 // SELECT * FROM photos WHERE attached_id IN (${map($ => $.id, users)}) AND attached_type = 'users';
 // SELECT * FROM photos WHERE attached_id IN (${map($ => $.id, comments)}) AND attached_type = 'comments';
 ```
+
+`p -` refers to Polymorphic + Has one, `p <` refers to Polymorphic + Has many.
 
 ### Many to many
 
@@ -387,35 +391,35 @@ ASSOCIATE `
 
 const posts = await ASSOCIATE `
   posts ${{
-    table: 'articles' // 데이터베이스 테이블 명이 다를 때
+    table: 'articles'
   }}
-    - user ${{ // - 를 했으므로 하나를 객체로 가져옴
-      left_key: 'writer_id', // articles가 가진 members.member_id를 가리키는 컬럼
-      key: 'member_id', // members 테이블이 가진 키
-      table: 'members' // user의 테이블 명
+    - user ${{
+      left_key: 'writer_id',
+      key: 'member_id',
+      table: 'members'
     }}
-    < comments ${{ // < 를 했으므로 배열로 여러개를 가져옴
-      key: 'article_id' // articles의 id를 가리키는 comments가 가진 컬럼
+    < comments ${{
+      key: 'article_id'
     }}
       - user ${{
-        left_key: 'writer_id', // articles가 가진 members.member_id를 가리키는 컬럼
-        key: 'member_id', // members 테이블이 가진 키
-        table: 'members' // user의 테이블 명
+        left_key: 'writer_id',
+        key: 'member_id',
+        table: 'members'
       }}
-      p < likes ${{ // 하나의 likes 테이블을 통해 comments와 posts의 likes를 구현
+      p < likes ${{
         poly_type: { parent_name: 'comments' },
         key: 'parent_id'
       }}
-    p < likes ${{ // 하나의 likes 테이블을 통해 comments와 posts의 likes를 구현
+    p < likes ${{
       poly_type: { parent_name: 'articles' },
       key: 'parent_id'
     }}
-    x tags ${{ // x 를 통해 중간 테이블을 join 하여 다대다 관계 구현
-      left_key: 'id', // articles.id (articles.id = tags_articles.article_id)
-      left_xkey: 'article_id', // left_key와 매칭되는 tags_articles의 키 article_id
-      xtable: 'tags_articles', // 중간 테이블 이름
-      xkey: 'tag_name', // key와 매칭되는 tags_articles의 키 tag_name
-      key: 'name' // tags가 가진 키 (tags_articles.tag_name = tags.name)
+    x tags ${{
+      left_key: 'id',
+      left_xkey: 'article_id',
+      xtable: 'tags_articles',
+      xkey: 'tag_name',
+      key: 'name'
     }}
 `;
 ```

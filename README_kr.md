@@ -251,6 +251,8 @@ posts[0]._.comments[0].body // 코멘트 내용
 posts[0]._.comments[0]._.user.name // 댓글 작성자 이름
 ```
 
+`- user`의 `-`는 Belongs to 이고 `< comments`의 `<`는 Has many 입니다.
+
 ### Polymorphic
 
 ```javascript
@@ -272,6 +274,8 @@ await ASSOCIATE `
 // SELECT * FROM photos WHERE attached_id IN (${map($ => $.id, users)}) AND attached_type = 'users';
 // SELECT * FROM photos WHERE attached_id IN (${map($ => $.id, comments)}) AND attached_type = 'comments';
 ```
+
+`p -`는 Polymorphic + Has one 이고 `p <`는 Polymorphic + Has many 입니다.
 
 ### Many to many
 
