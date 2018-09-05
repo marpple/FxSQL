@@ -1,4 +1,4 @@
-# MQL - Node.js 데이터베이스 쿼리 빌더
+# MQL - Node.js Functional SQL Query Builder & ORM
 
 [EN](https://github.com/marpple/MQL) | [KR](https://github.com/marpple/MQL/blob/master/README_kr.md)
 
