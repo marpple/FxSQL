@@ -191,7 +191,7 @@ COLUMN == CL; // true
 
 await QUERY `
   SELECT
-    COLUMN('id', 'bb as cc', 't2.name', 't2.name as name2', { a: 'c' }, { 't3.a': 'd' })
+    ${COLUMN('id', 'bb as cc', 't2.name', 't2.name as name2', { a: 'c' }, { 't3.a': 'd' })}
       ...
 `;
 // SELECT
@@ -207,7 +207,7 @@ TABLE == TB; // true
 await QUERY `
   SELECT
     ...
-    FROM TABLE('t1'), TABLE('tt as t2')
+    FROM ${TABLE('t1')}, ${TABLE('tt as t2')}
 `;
 // SELECT
 //   ...
