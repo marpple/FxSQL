@@ -25,6 +25,7 @@ const mix = (arr1, arr2) => arr1.reduce((res, item, i) => {
 }, []);
 
 const cmap = curry((f, arr) => Promise.all(arr.map(f)));
+const first = a => a && a[0];
 
 const is_column = f => f && f[SymbolColumn];
 const is_tag = f => f && f[SymbolTag];
@@ -367,6 +368,10 @@ function BASE({
       return base_query(pool_query, texts, values);
     }
 
+    const QUERY1 = pipe(QUERY, first),
+      ASSOCIATE = baseAssociate(QUERY),
+      ASSOCIATE1 = pipe(ASSOCIATE, first);
+
     const ljoin = use_ljoin ? await load_ljoin({
       ready_sqls, add_column, tag, MQL_DEBUG,
       connection_info, QUERY, VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL, SQLS
@@ -375,7 +380,9 @@ function BASE({
     return {
       VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL, MQL_DEBUG,
       QUERY,
-      ASSOCIATE: baseAssociate(QUERY),
+      QUERY1,
+      ASSOCIATE,
+      ASSOCIATE1,
       LJOIN: ljoin(QUERY),
       async TRANSACTION() {
         try {
@@ -385,10 +392,15 @@ function BASE({
           function QUERY(texts, ...values) {
             return base_query(client_query, texts, values);
           }
+          const QUERY1 = pipe(QUERY, first),
+          ASSOCIATE = baseAssociate(QUERY),
+          ASSOCIATE1 = pipe(ASSOCIATE, first);
           return {
             VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL,
             QUERY,
-            ASSOCIATE: baseAssociate(QUERY),
+            QUERY1,
+            ASSOCIATE,
+            ASSOCIATE1,
             LJOIN: ljoin(QUERY),
             COMMIT: _ => COMMIT(client),
             ROLLBACK: _ => ROLLBACK(client)
