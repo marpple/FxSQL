@@ -1,9 +1,10 @@
 import {
   is_string, is_function, flatten, flatten as cat, reduce, tap, go, pipe,
-  map, filter, reject, pluck, uniq, each, index_by, group_by, last, object, curry
+  map, filter, reject, pluck, uniq, each, index_by, group_by, object, curry
 } from 'fxjs2';
 import pg from 'pg';
 import mysql from 'mysql';
+import { plural } from 'pluralize';
 import load_ljoin from './ljoin.js'
 import { dump } from 'dumper.js';
 
@@ -26,13 +27,18 @@ const mix = (arr1, arr2) => arr1.reduce((res, item, i) => {
 
 const cmap = curry((f, arr) => Promise.all(arr.map(f)));
 const first = a => a && a[0];
+const last = a => a && a[a.length - 1];
 
+const is_plain_object = obj => !!obj && typeof obj == 'object' && obj.constructor == Object;
 const is_column = f => f && f[SymbolColumn];
 const is_tag = f => f && f[SymbolTag];
 const is_injection = query => query == SymbolInjection;
 
 const tag = f => typeof f == 'function' ?
   Object.assign(f, { [SymbolTag]: true }) : tag(_ => f);
+
+
+const add_s = word => last(word) == 'y'
 
 function BASE({
   create_pool,
@@ -266,7 +272,7 @@ function BASE({
         each(option => {
           option.column = option.column || '*';
           option.query = option.query || tag();
-          option.table = option.table || (option.rel_type == '-' ? option.as + 's' : option.as);
+          option.table = option.table || (option.rel_type == '-' ? plural(option.as) : option.as);
           option.rels = [];
         }),
         function setting([left, ...rest]) {
@@ -293,7 +299,7 @@ function BASE({
             }
             me.poly_type = me.is_poly ?
               SQL `AND ${EQ(
-                (me.poly_type && typeof me.poly_type == 'object') ? me.poly_type : { attached_type: me.poly_type || left.table }
+                is_plain_object(me.poly_type) ? me.poly_type : { attached_type: me.poly_type || left.table }
               )}` : tag();
             cur.push(me);
           }, rest);
