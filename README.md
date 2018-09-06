@@ -17,14 +17,14 @@
 
 
 ## Overview
-  - [Installation](#Installation)
-  - [Connect](#Connect)
+  - [Installation](#installation)
+  - [Connect](#connect)
     - [PostgreSQL](#postgresql)
     - [MySQL](#mysql)
-  - [Simple query](#Simple-query)
-  - [Subquery, Join](#Subquery-Join)
-  - [Ready to be used](#Ready-to-be-used)
-  - [Helper Function](#Helper-Function)
+  - [Simple query](#simple-query)
+  - [Subquery, Join](#subquery-Join)
+  - [Ready to be used](#ready-to-be-used)
+  - [Helper Function](#helper-Function)
     - [EQ](#eq)
     - [IN](#in)
     - [NOT_IN](#not_in)
@@ -33,12 +33,12 @@
     - [COLUMN, CL](#column-cl)
     - [TABLE, TB](#table-tb)
   - [Associations](#associations)
-    - [Common use](#Common-use)
+    - [Common use](#common-use)
     - [Polymorphic](#polymorphic)
     - [Transaction](#transaction)
     - [Many to many](#many-to-many)
     - [Hook](#hook)
-  - [Option](#Option)
+  - [Option](#option)
   - [DEBUG](#debug)
 
 ## Installation
