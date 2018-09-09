@@ -4,7 +4,7 @@ import {
 } from 'fxjs2';
 import pg from 'pg';
 import mysql from 'mysql';
-import { plural } from 'pluralize';
+import { plural, singular } from 'pluralize';
 import load_ljoin from './ljoin.js'
 import { dump } from 'dumper.js';
 
@@ -282,19 +282,19 @@ function BASE({
             const left = last(cur);
             left.rels.push(me);
             if (me.rel_type == '-') {
-              me.left_key = me.left_key || (me.is_poly ? 'id' : me.table.substr(0, me.table.length-1) + '_id');
+              me.left_key = me.left_key || (me.is_poly ? 'id' : singular(me.table) + '_id');
               me.where_key = me.key || (me.is_poly ? 'attached_id' : 'id');
               me.xjoin = tag();
             } else if (me.rel_type == '<') {
               me.left_key = me.left_key || 'id';
-              me.where_key = me.key || (me.is_poly ? 'attached_id' : left.table.substr(0, left.table.length-1) + '_id');
+              me.where_key = me.key || (me.is_poly ? 'attached_id' : singular(left.table) + '_id');
               me.xjoin = tag();
             } else if (me.rel_type == 'x') {
               me.left_key = me.left_key || 'id';
-              me.where_key = '_#_xtable_#_.' + (me.left_xkey || left.table.substr(0, left.table.length-1) + '_id');
+              me.where_key = '_#_xtable_#_.' + (me.left_xkey || singular(left.table) + '_id');
               var xtable = me.xtable || (left.table + '_' + me.table);
               me.xjoin = SQL `INNER JOIN ${TB(xtable)} as ${escape_dq('_#_xtable_#_')} on ${EQ({
-                ['_#_xtable_#_.' + (me.xkey || me.table.substr(0, me.table.length-1) + '_id')]: COLUMN(me.as + '.' + (me.key || 'id'))
+                ['_#_xtable_#_.' + (me.xkey || singular(me.table) + '_id')]: COLUMN(me.as + '.' + (me.key || 'id'))
               })}`;
             }
             me.poly_type = me.is_poly ?
