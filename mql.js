@@ -37,7 +37,6 @@ const is_injection = query => query == SymbolInjection;
 const tag = f => typeof f == 'function' ?
   Object.assign(f, { [SymbolTag]: true }) : tag(_ => f);
 
-
 const add_s = word => last(word) == 'y'
 
 function BASE({
@@ -128,7 +127,6 @@ function BASE({
 
   function merge_query(queries) {
     if (queries.find(is_injection)) return SymbolInjection;
-
     var query = reduce((res, query) => {
       if (!query) return res;
       if (query.text) res.text += (' ' + query.text);
@@ -274,6 +272,7 @@ function BASE({
           option.query = option.query || tag();
           option.table = option.table || (option.rel_type == '-' ? plural(option.as) : option.as);
           option.rels = [];
+          option.row_number = option.row_number || [];
         }),
         function setting([left, ...rest]) {
           const cur = [left];
@@ -309,7 +308,6 @@ function BASE({
           const lefts = await QUERY `
             SELECT ${add_column(me)}
               FROM ${TB(me.table)} AS ${TB(me.as)} ${me.query}`;
-
           return go(
             [lefts, me],
             function recur([lefts, option]) {
@@ -320,23 +318,33 @@ function BASE({
                 var fold_key = me.rel_type == 'x' ?
                   `_#_${me.where_key.split('.')[1]}_#_` : me.where_key;
 
-                var colums = uniq(add_column(me).originals.concat(me.where_key + (me.rel_type == 'x' ? ` AS ${fold_key}` : '')));
+                const colums = uniq(add_column(me).originals.concat(me.as +'.'+me.where_key + (me.rel_type == 'x' ? ` AS ${fold_key}` : '')));
 
-                var in_vals = filter(a => a != null, pluck(me.left_key, lefts));
-
-                const rights = !in_vals.length ? [] : await QUERY `
+                const in_vals = filter(a => a != null, pluck(me.left_key, lefts));
+                const is_row_num = me.row_number.length == 2;
+                const rights = (!in_vals.length ? [] : await (is_row_num ?
+                  QUERY `
+                  SELECT *
+                  FROM (
+                    SELECT
+                      ${COLUMN(...colums)}, 
+                      ROW_NUMBER() OVER (PARTITION BY ${CL(me.where_key)} ORDER BY ${me.row_number[1]}) as "--row_number--"
+                    FROM ${TB(me.table)} AS ${TB(me.as)} 
+                    ${me.xjoin} 
+                    WHERE ${IN(me.as +'.'+me.where_key, in_vals)} ${me.poly_type} ${tag(query)}
+                  ) AS ${TB(me.as)}
+                  WHERE ${TB(me.as)}."--row_number--"<=${me.row_number[0]}`
+                  :
+                  QUERY `
                   SELECT ${COLUMN(...colums)}
                     FROM ${TB(me.table)} AS ${TB(me.as)} 
                     ${me.xjoin} 
-                    WHERE 
-                      ${IN(me.where_key, in_vals)}
-                      ${me.poly_type}
-                      ${tag(query)}`;
+                    WHERE ${IN(me.where_key, in_vals)} ${me.poly_type} ${tag(query)}`));
 
-                var [folder, default_value] = me.rel_type == '-' ? [index_by, () => ({})] : [group_by, () => []];
-
+                const [folder, default_value] = me.rel_type == '-' ? [index_by, () => ({})] : [group_by, () => []];
                 return go(
                   rights,
+                  is_row_num ? map(r => delete r['--row_number--'] && r) : r => r,
                   folder(a => a[fold_key]),
                   folded => each(function(left) {
                     left._ = left._ || {};
@@ -384,7 +392,7 @@ function BASE({
     }) : _ => _;
 
     return {
-      VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL, MQL_DEBUG,
+      VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL, SQLS, MQL_DEBUG,
       QUERY,
       QUERY1,
       ASSOCIATE,
@@ -416,7 +424,7 @@ function BASE({
     }
   }
 
-  return { CONNECT, VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL, MQL_DEBUG }
+  return { CONNECT, VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL, SQLS, MQL_DEBUG }
 }
 
 const method_promise = curry((name, obj) =>
