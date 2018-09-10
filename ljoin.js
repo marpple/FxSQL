@@ -3,6 +3,8 @@ import {
   map, filter, reject, pluck, uniq, each, index_by, group_by, last, object, curry
 } from 'fxjs2';
 
+import { plural, singular } from 'pluralize';
+
 export default async function load_ljoin({
   ready_sqls, add_column, tag, MQL_DEBUG,
   connection_info, QUERY, VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL, SQLS
@@ -43,16 +45,28 @@ export default async function load_ljoin({
   function where_in_query(left, where_in, QUERY) {
     const colums = uniq(add_column(left).originals.concat(left.key));
     const query = left.query();
-    if (query && query.text) query.text = 'AND ' + query.text.replace(/WHERE|AND/i, '');
-    return QUERY`
-    SELECT ${CL(...colums)}
-    FROM ${TB(left.table)} AS ${TB(left.as)}
-    ${where_in}
-    ${tag(query)}
-    `;
+    if (query && query.text) query.text = query.text.replace(/^\s*WHERE/i, 'AND');
+    return left.row_number.length == 2 ?
+      QUERY `
+      SELECT *
+      FROM (
+        SELECT
+          ${COLUMN(...colums)}, 
+          ROW_NUMBER() OVER (PARTITION BY ${CL(left.key)} ORDER BY ${left.row_number[1]}) as "--row_number--"
+        FROM ${TB(left.table)} AS ${TB(left.as)}       
+        ${where_in || tag()}
+      ) AS "--row_number_table--"
+      WHERE "--row_number_table--"."--row_number--"<=${left.row_number[0]}`
+      :
+      QUERY`
+      SELECT ${CL(...colums)}
+      FROM ${TB(left.table)} AS ${TB(left.as)}
+      ${where_in || tag()}
+      ${tag(query)}
+    `
   }
 
-  function left_join_query(left, where_in_query, QUERY) {
+  function left_join_query(left, where_in, QUERY) {
     let i = 0;
     left.lj_as = 'lj'+ i++ + "//"+left.depth;
     const first_col = add_as_join(left, left.lj_as).originals.concat(left.as + '.id' + ' AS ' + `${left.lj_as}>_<id`);
@@ -66,12 +80,13 @@ export default async function load_ljoin({
         each(right => {
           const query = right.query();
           right.lj_as = 'lj'+ i++ + "//"+right.depth;
-          if (query && query.text) query.text = 'AND ' + query.text.replace(/WHERE|AND/i, '');
+          if (query && query.text) query.text = query.text.replace(/^\s*WHERE/i, 'AND');
           join_columns.push(
             uniq(add_as_join(right, right.lj_as).originals
               .concat(right.as + '.' + right.key + ' AS ' + `${right.lj_as}>_<${right.key}`)
-              .concat(left.as + '.id' + ' AS ' + `${right.lj_as}>_<id`))
+              .concat(right.as + '.id' + ' AS ' + `${right.lj_as}>_<id`))
           );
+
           join_sqls.push(SQL `
           LEFT JOIN
            ${TB(right.table)} AS ${TB(right.as)}
@@ -87,15 +102,30 @@ export default async function load_ljoin({
       () => {
         const query = left.query();
         if (!query) return query;
-        query.text = (where_in_query ? 'AND ' : 'WHERE ') + query.text.replace(/WHERE|AND/i, '');
+        query.text = query.text.replace(/^\s*WHERE/i, where_in ? 'AND' : 'WHERE');
         return query;
       },
-      (query) => QUERY `
-        SELECT ${COLUMN(...cat(join_columns))}
-        FROM ${TB(left.table)} AS ${TB(left.as)}
-        ${SQLS(join_sqls)}
-        ${where_in_query || tag()}
-        ${tag(query)}`,
+      (query) => left.row_number.length == 2  ?
+        QUERY `
+        SELECT "--row_number_table--".*
+        FROM (
+          SELECT 
+            ${COLUMN(...cat(join_columns))},
+            ROW_NUMBER() OVER (PARTITION BY ${CL(left.as + '.' + left.key)} ORDER BY ${left.row_number[1]}) as "--row_number--"
+          FROM ${TB(left.table)} AS ${TB(left.as)}
+          ${SQLS(join_sqls)}
+          ${where_in || tag()}
+          ${tag(query)}
+        ) AS "--row_number_table--"
+        WHERE "--row_number_table--"."--row_number--"<=${left.row_number[0]}`
+        :
+        QUERY `
+          SELECT ${COLUMN(...cat(join_columns))}
+          FROM ${TB(left.table)} AS ${TB(left.as)}
+          ${SQLS(join_sqls)}
+          ${where_in || tag()}
+          ${tag(query)}`,
+      left.row_number.length == 2 ? map(r => delete r['--row_number--'] && r) : r => r,
       map(row => {
         const before_result_obj = {};
         const result_obj = {};
@@ -127,6 +157,7 @@ export default async function load_ljoin({
           option.column = option.column || CL(...table_columns[option.table]);
           option.left_joins = [];
           option.rels = [];
+          option.row_number = option.row_number || [];
         }),
         ([left, ...rest]) => {
           const cur = [left];
@@ -134,12 +165,12 @@ export default async function load_ljoin({
             while (!(last(cur).depth < me.depth)) cur.pop();
             const left = last(cur);
             if (me.rel_type == '-') {
-              me.left_key = me.left_key || (me.is_poly ? 'id' : me.table.substr(0, me.table.length-1) + '_id');
+              me.left_key = me.left_key || (me.is_poly ? 'id' : singular(me.table) + '_id');
               me.key = me.key || (me.is_poly ? 'attached_id' : 'id');
               left.left_joins.push(me);
             } else {
               me.left_key = me.left_key || 'id';
-              me.key = me.key || (me.is_poly ? 'attached_id' : left.table.substr(0, left.table.length-1) + '_id');
+              me.key = me.key || (me.is_poly ? 'attached_id' : singular(left.table) + '_id');
             }
             left.rels.push(me);
 
@@ -161,12 +192,12 @@ export default async function load_ljoin({
               FROM ${TB(left.table)} AS ${TB(left.as)} ${left.query}`
         ],
         function recur([left, results]) {
+          if (reject(r=>r, results).length) return ;
           return go(
             left.rels,
             cmap(async function(me) {
-              const next_result = cat(map(r => r._ ? r._[me.as] : null, results));
               const f_key_ids = uniq(filter((r) => !!r, pluck(me.left_key, results)));
-              if (me.rel_type == '-' || !f_key_ids.length) return recur([me, next_result]);
+              if (me.rel_type == '-' || !f_key_ids.length) return recur([me, cat(map(r => r._ ? r._[me.as] : null, results))]);
               return go(
                 (!me.left_join_over && me.left_joins.length ?
                   left_join_query : where_in_query)(me, SQL `WHERE ${IN(me.as + '.' + me.key, f_key_ids)}`, QUERY),

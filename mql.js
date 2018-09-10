@@ -313,7 +313,7 @@ function BASE({
             function recur([lefts, option]) {
               return lefts.length && option.rels.length && go(option.rels, cmap(async function(me) {
                 const query = me.query();
-                if (query && query.text) query.text = 'AND ' + query.text.replace(/WHERE|AND/i, '');
+                if (query && query.text) query.text = query.text.replace(/^\s*WHERE/i, 'AND');
 
                 var fold_key = me.rel_type == 'x' ?
                   `_#_${me.where_key.split('.')[1]}_#_` : me.where_key;
@@ -332,8 +332,8 @@ function BASE({
                     FROM ${TB(me.table)} AS ${TB(me.as)} 
                     ${me.xjoin} 
                     WHERE ${IN(me.as +'.'+me.where_key, in_vals)} ${me.poly_type} ${tag(query)}
-                  ) AS ${TB(me.as)}
-                  WHERE ${TB(me.as)}."--row_number--"<=${me.row_number[0]}`
+                  ) AS "--row_number_table--"
+                  WHERE "--row_number_table--"."--row_number--"<=${me.row_number[0]}`
                   :
                   QUERY `
                   SELECT ${COLUMN(...colums)}
