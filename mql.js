@@ -290,10 +290,10 @@ function BASE({
               me.xjoin = tag();
             } else if (me.rel_type == 'x') {
               me.left_key = me.left_key || 'id';
-              me.where_key = 'xx_table.' + (me.left_xkey || singular(left.table) + '_id');
+              me.where_key = '_#_xtable_#_.' + (me.left_xkey || singular(left.table) + '_id');
               var xtable = me.xtable || (left.table + '_' + me.table);
-              me.xjoin = SQL `INNER JOIN ${TB(xtable)} AS ${TB('xx_table')} on ${EQ({
-                ['xx_table.' + (me.xkey || singular(me.table) + '_id')]: COLUMN(me.as + '.' + (me.key || 'id'))
+              me.xjoin = SQL `INNER JOIN ${TB(xtable)} AS ${TB('_#_xtable_#_')} on ${EQ({
+                ['_#_xtable_#_.' + (me.xkey || singular(me.table) + '_id')]: COLUMN(me.as + '.' + (me.key || 'id'))
               })}`;
             }
             me.poly_type = me.is_poly ?
