@@ -290,10 +290,10 @@ function BASE({
               me.xjoin = tag();
             } else if (me.rel_type == 'x') {
               me.left_key = me.left_key || 'id';
-              me.where_key = '_#_xtable_#_.' + (me.left_xkey || singular(left.table) + '_id');
+              me.where_key = 'xx_table.' + (me.left_xkey || singular(left.table) + '_id');
               var xtable = me.xtable || (left.table + '_' + me.table);
-              me.xjoin = SQL `INNER JOIN ${TB(xtable)} AS ${TB('_#_xtable_#_')} on ${EQ({
-                ['_#_xtable_#_.' + (me.xkey || singular(me.table) + '_id')]: COLUMN(me.as + '.' + (me.key || 'id'))
+              me.xjoin = SQL `INNER JOIN ${TB(xtable)} AS ${TB('xx_table')} on ${EQ({
+                ['xx_table.' + (me.xkey || singular(me.table) + '_id')]: COLUMN(me.as + '.' + (me.key || 'id'))
               })}`;
             }
             me.poly_type = me.is_poly ?
@@ -318,7 +318,8 @@ function BASE({
                 var fold_key = me.rel_type == 'x' ?
                   `_#_${me.where_key.split('.')[1]}_#_` : me.where_key;
 
-                const colums = uniq(add_column(me).originals.concat(me.as +'.'+me.where_key + (me.rel_type == 'x' ? ` AS ${fold_key}` : '')));
+                const colums = uniq(add_column(me).originals.concat(
+                  me.rel_type != 'x' ? me.as + '.' + me.where_key : me.where_key + ' AS ' + fold_key));
 
                 const in_vals = filter(a => a != null, pluck(me.left_key, lefts));
                 const is_row_num = me.row_number.length == 2;
