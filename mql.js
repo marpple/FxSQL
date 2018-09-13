@@ -1,6 +1,6 @@
 import {
   is_string, is_function, flatten, flatten as cat, reduce, tap, go, pipe,
-  map, filter, reject, pluck, uniq, each, index_by, group_by, object, curry
+  map, filter, reject, pluck, uniq, each, index_by, group_by, uniqueBy, object, curry
 } from 'fxjs2';
 import pg from 'pg';
 import mysql from 'mysql';
@@ -26,6 +26,8 @@ const mix = (arr1, arr2) => arr1.reduce((res, item, i) => {
 }, []);
 
 const cmap = curry((f, arr) => Promise.all(arr.map(f)));
+const uniq_index_by = curry((f, coll) => index_by(f, uniqueBy(f, coll)));
+
 const first = a => a && a[0];
 const last = a => a && a[a.length - 1];
 
@@ -36,8 +38,6 @@ const is_injection = query => query == SymbolInjection;
 
 const tag = f => typeof f == 'function' ?
   Object.assign(f, { [SymbolTag]: true }) : tag(_ => f);
-
-const add_s = word => last(word) == 'y'
 
 function BASE({
   create_pool,
@@ -292,7 +292,7 @@ function BASE({
               me.left_key = me.left_key || 'id';
               me.where_key = '_#_xtable_#_.' + (me.left_xkey || singular(left.table) + '_id');
               var xtable = me.xtable || (left.table + '_' + me.table);
-              me.xjoin = SQL `INNER JOIN ${TB(xtable)} as ${escape_dq('_#_xtable_#_')} on ${EQ({
+              me.xjoin = SQL `INNER JOIN ${TB(xtable)} AS ${TB('_#_xtable_#_')} on ${EQ({
                 ['_#_xtable_#_.' + (me.xkey || singular(me.table) + '_id')]: COLUMN(me.as + '.' + (me.key || 'id'))
               })}`;
             }
@@ -341,7 +341,7 @@ function BASE({
                     ${me.xjoin} 
                     WHERE ${IN(me.where_key, in_vals)} ${me.poly_type} ${tag(query)}`));
 
-                const [folder, default_value] = me.rel_type == '-' ? [index_by, () => ({})] : [group_by, () => []];
+                const [folder, default_value] = me.rel_type == '-' ? [uniq_index_by, () => ({})] : [group_by, () => []];
                 return go(
                   rights,
                   is_row_num ? map(r => delete r['--row_number--'] && r) : r => r,
