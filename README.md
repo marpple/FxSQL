@@ -122,7 +122,7 @@ QUERY achieved from CONNECT uses a connection pool.
 
 ```javascript
 const POOL = await CONNECT();
-const = {
+const {
   VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL, MQL_DEBUG,
   QUERY,
   ASSOCIATE,
@@ -153,7 +153,7 @@ const users = await QUERY `SELECT * FROM users WHERE ${IN('id', [15, 19, 20, 40]
 ### NOT_IN
 
 ```javascript
-const users = await QUERY `SELECT * FROM users WHERE ${NOT_IN('id', [2, 4])} LIMIT 3 ORDER BY ID`;
+const users = await QUERY `SELECT * FROM users WHERE ${NOT_IN('id', [2, 4])} ORDER BY ID LIMIT 3`;
 // [{ id: 1, ...}, { id: 3, ...}, { id: 5, ...}]
 ```
 
@@ -272,7 +272,7 @@ await ASSOCIATE `
     < comments
       p < photos
 `;
-// SELECT * FROM photos WHERE attached_id IN (${map($ => $.id, posts)}) AND attached_type = 'photos';
+// SELECT * FROM photos WHERE attached_id IN (${map($ => $.id, posts)}) AND attached_type = 'posts';
 // SELECT * FROM photos WHERE attached_id IN (${map($ => $.id, users)}) AND attached_type = 'users';
 // SELECT * FROM photos WHERE attached_id IN (${map($ => $.id, comments)}) AND attached_type = 'comments';
 ```
