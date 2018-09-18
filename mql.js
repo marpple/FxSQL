@@ -25,6 +25,8 @@ const mix = (arr1, arr2) => arr1.reduce((res, item, i) => {
   return res;
 }, []);
 
+const minBy = (f, arr) => arr.reduce((a, b) => f(a) <= f(b) ? a : b);
+
 const cmap = curry((f, arr) => Promise.all(arr.map(f)));
 const uniq_index_by = curry((f, coll) => index_by(f, uniqueBy(f, coll)));
 
@@ -82,8 +84,40 @@ function BASE({
 
   const dq = str => ('' + str).split('.').map(s => s == '*' ? s : escape_dq(s)).join('.');
 
+  function ASSOCIATE_MODULE(strs, ...tails) {
+    var [strs2, tails2] = import_module(strs, tails);
+
+    const splited = flatten(strs.map(str => str.split('\n')))
+      .filter(str => str.match(/^\s*/)[0])
+      .filter(str => str.trim());
+
+    const min = minBy(str => str.match(/^\s*/)[0].length, splited);
+    const a = '\n' + min.match(/^\s*/)[0];
+
+    return [strs2.map(str => str.split(a).join('\n')), tails2];
+  }
+
+  function import_module(strs, tails) {
+    if (!tails.some(tail => typeof tail == 'function' && !is_tag(tail))) return [strs, tails];
+
+    var strs2 = [...strs];
+    var j = 0;
+    var tails2 = tails.map(function(tail, i) {
+      if (typeof tail != 'function' || is_tag(tail)) return tail;
+      var k = i + j++;
+      var spaces = last(strs2[k].split('\n')).match(/^\s*/)[0];
+      var [strs3, tails3] = tail();
+      strs2.splice(k+1, 0, strs3.map(str => str.replace(/\n/g, '\n' + spaces)));
+      return tails3;
+    });
+
+    return [flatten(strs2), flatten(tails2)];
+  }
+
   function ready_sqls(strs, tails) {
-    const options = strs
+    const [strs2, tails2] = import_module(strs, tails);
+
+    const options = strs2
       .map(s => s
         .replace(/\s*\n/, '')
         .split('\n')
@@ -108,7 +142,7 @@ function BASE({
       );
 
       go(
-        tails,
+        tails2,
         map(tail =>
           is_tag(tail) ?
             { query: tail } :
@@ -403,6 +437,7 @@ function BASE({
       QUERY1,
       ASSOCIATE,
       ASSOCIATE1,
+      ASSOCIATE_MODULE,
       LOAD_LJOIN: use_ljoin ? LOAD_LJOIN : null,
       async TRANSACTION() {
         try {
