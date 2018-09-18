@@ -362,7 +362,7 @@ function BASE({
     }
   }
 
-  async function CONNECT(connection_info) {
+  function CONNECT(connection_info) {
     const pool = create_pool(connection_info);
     const pool_query = query_fn(pool);
 
@@ -387,10 +387,15 @@ function BASE({
       ASSOCIATE = baseAssociate(QUERY),
       ASSOCIATE1 = pipe(ASSOCIATE, first);
 
-    const ljoin = use_ljoin ? await load_ljoin({
-      ready_sqls, add_column, tag, MQL_DEBUG,
-      connection_info, QUERY, VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL, SQLS
-    }) : _ => _;
+    var ljoin = null;
+
+    async function LOAD_LJOIN(QUERY) {
+      if (!ljoin) ljoin = await load_ljoin({
+        ready_sqls, add_column, tag, MQL_DEBUG,
+        connection_info, QUERY, VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL, SQLS
+      });
+      return ljoin(QUERY);
+    }
 
     return {
       VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL, SQLS, MQL_DEBUG,
@@ -398,7 +403,7 @@ function BASE({
       QUERY1,
       ASSOCIATE,
       ASSOCIATE1,
-      LJOIN: ljoin(QUERY),
+      LOAD_LJOIN: use_ljoin ? LOAD_LJOIN : null,
       async TRANSACTION() {
         try {
           const client = await get_connection(pool);
@@ -416,7 +421,7 @@ function BASE({
             QUERY1,
             ASSOCIATE,
             ASSOCIATE1,
-            LJOIN: ljoin(QUERY),
+            LJOIN: use_ljoin && ljoin ? await ljoin(QUERY) : null,
             COMMIT: _ => COMMIT(client),
             ROLLBACK: _ => ROLLBACK(client)
           }
