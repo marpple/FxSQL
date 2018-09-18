@@ -52,7 +52,7 @@ npm i mql2
 ```javascript
 const { PostgreSQL } = require('mql2');
 const { CONNECT } = PostgreSQL;
-const POOL = await CONNECT({
+const POOL = CONNECT({
   host: 'localhost',
   user: 'username',
   password: '1234',
@@ -69,7 +69,7 @@ MQL은 내부적으로 node-postgres를 사용합니다. `CONNECT` 함수에 사
 ```javascript
 const { MySQL } = require('mql2');
 const { CONNECT } = MySQL;
-const POOL = await CONNECT({
+const POOL = CONNECT({
   host: 'localhost',
   user: 'username',
   password: '1234',
@@ -119,7 +119,7 @@ QUERY `
 ## 함수 불러오기
 
 ```javascript
-const POOL = await CONNECT();
+const POOL = CONNECT();
 const {
   VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL, MQL_DEBUG,
   QUERY,
@@ -450,7 +450,7 @@ users[0]._.posts[1]._is_best; // false
 ```javascript
 const { PostgreSQL } = require('mql2');
 const { CONNECT } = PostgreSQL;
-const POOL = await CONNECT({
+const POOL = CONNECT({
   host: 'localhost',
   user: 'username',
   password: '1234',

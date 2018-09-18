@@ -54,7 +54,7 @@ npm i mql2
 ```javascript
 const { PostgreSQL } = require('mql2');
 const { CONNECT } = PostgreSQL;
-const POOL = await CONNECT({
+const POOL = CONNECT({
   host: 'localhost',
   user: 'username',
   password: '1234',
@@ -71,7 +71,7 @@ MQL is built on node-postgres. The parameter of CONNECT function is the same as 
 ```javascript
 const { MySQL } = require('mql2');
 const { CONNECT } = MySQL;
-const POOL = await CONNECT({
+const POOL = CONNECT({
   host: 'localhost',
   user: 'username',
   password: '1234',
@@ -121,7 +121,7 @@ QUERY achieved from CONNECT uses a connection pool.
 ## Ready to be used
 
 ```javascript
-const POOL = await CONNECT();
+const POOL = CONNECT();
 const {
   VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL, MQL_DEBUG,
   QUERY,
@@ -453,7 +453,7 @@ users[0]._.posts[1]._is_best; // false
 ```javascript
 const { PostgreSQL } = require('mql2');
 const { CONNECT } = PostgreSQL;
-const POOL = await CONNECT({
+const POOL = CONNECT({
   host: 'localhost',
   user: 'username',
   password: '1234',
