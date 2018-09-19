@@ -107,11 +107,19 @@ function BASE({
       var k = i + j++;
       var spaces = last(strs2[k].split('\n')).match(/^\s*/)[0];
       var [strs3, tails3] = tail();
-      strs2.splice(k+1, 0, strs3.map(str => str.replace(/\n/g, '\n' + spaces)));
+
+      var maped = strs3.map(str => str.replace(/\n/g, '\n' + spaces));
+      const splited = strs2[k].split('\n');
+      if (!last(splited).trim()) {
+        splited[splited.length-1] = maped[0].substr(1);
+        strs2[k] = splited.join('\n');
+        maped = maped.slice(1);
+      }
+      strs2.splice(k+1, 0, maped);
       return tails3;
     });
 
-    return [flatten(strs2), flatten(tails2)];
+    return [flatten(strs2).filter(str => str.trim()), flatten(tails2)];
   }
 
   function ready_sqls(strs, tails) {
