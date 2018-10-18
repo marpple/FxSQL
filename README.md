@@ -37,7 +37,9 @@
     - [Polymorphic](#polymorphic)
     - [Transaction](#transaction)
     - [Many to many](#many-to-many)
+    - [ROW_NUMBER + PARTITION](#row_number--partition-postgresql)
     - [Hook](#hook)
+    - [ASSOCIATE_MODULE](#associate_module)
   - [Option](#option)
   - [DEBUG](#debug)
 
@@ -427,6 +429,19 @@ const posts = await ASSOCIATE `
 
 If you use VIEW in databases, it's much easier. Then, you don't need to insert all correct column and table names.
 
+### ROW_NUMBER + PARTITION (PostgreSQL)
+
+You can set the `row_number` option to fetch only up to four comments each post. Internally use `ROW_NUMBER` and` PARTITION`.
+
+```javascript
+ASSOCIATE `
+  posts ${SQL `WHERE is_hidden = false ORDER BY id DESC LIMIT ${10}`}
+    < comments ${{
+      row_number: [4, SQL `id DESC`]
+    }}
+`
+```
+
 ### Hook
 
 You can add virtual columns, sorting, filtering and etc by using Hook.
@@ -447,6 +462,52 @@ const users = await ASSOCIATE `
 users[0]._popular; // true
 users[0]._.posts[0]._is_best; // true
 users[0]._.posts[1]._is_best; // false
+```
+
+### ASSOCIATE_MODULE
+
+`ASSOCIATE` allows you to modularize options for reuse. `ASSOCIATE_MODULE` in the function to be passed to` ASSOCIATE`.
+
+```javascript
+Posts.rights = () => ASSOCIATE_MODULE `
+  - user
+    < comments ${{
+      row_number: [4, SQL `id DESC`]
+    }}
+     - user
+     p < likes
+      - user
+    p < likes
+      - user
+    x tags
+`;
+
+ASSOCIATE `
+  posts ${SQL `WHERE is_hidden = false ORDER BY id DESC LIMIT ${10}`}
+    ${Posts.rights}
+`;
+```
+
+Use currying to pass arguments.
+
+```javascript
+Posts.rights = (limit = 4) => () => ASSOCIATE_MODULE `
+  - user
+    < comments ${{
+      row_number: [limit, SQL `id DESC`]
+    }}
+     - user
+     p < likes
+      - user
+    p < likes
+      - user
+    x tags
+`;
+
+ASSOCIATE `
+  posts ${SQL `WHERE is_hidden = false ORDER BY id DESC LIMIT ${10}`}
+    ${Posts.rights(6)}
+`;
 ```
 
 ## Transaction

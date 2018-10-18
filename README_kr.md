@@ -35,7 +35,9 @@
     - [Polymorphic](#polymorphic)
     - [Transaction](#transaction)
     - [Many to many](#many-to-many)
+    - [ROW_NUMBER + PARTITION](#row_number--partition-postgresql)
     - [Hook](#hook)
+    - [ASSOCIATE_MODULE](#associate_module)
   - [옵션](#옵션)
   - [DEBUG](#debug)
 
@@ -425,9 +427,9 @@ const posts = await ASSOCIATE `
 
 위와 같이 옵션을 통해 매칭시켜줄 수 있지만, 데이터베이스 VIEW를 이용해 매칭하면 훨씬 간결한 코드를 유지할 수 있습니다.
 
-### ROW_NUMBER + PARTITION (PostgreSQL만 지원)
+### ROW_NUMBER + PARTITION (PostgreSQL)
 
-`row_number` 옵션을 통해 각각의 post 마다 최대 4개의 comments만 가져오도록 설정할 수 있습니다. 내부적으로 `ROW_NUMBER`와 `PARTITION`을 사용합니다.
+`row_number` 옵션을 통해 post 마다 각각 최대 4개의 comments만 가져오도록 설정할 수 있습니다. 내부적으로 `ROW_NUMBER`와 `PARTITION`을 사용합니다.
 
 ```javascript
 ASSOCIATE `
@@ -461,7 +463,7 @@ users[0]._.posts[1]._is_best; // false
 
 ### ASSOCIATE_MODULE
 
-`ASSOCIATE`에 재사용할 옵션을 모듈화할 수 있습니다. 모듈은 `ASSOCIATE_MODULE`을 실행하는 함수입니다.
+`ASSOCIATE`에서 재사용할 옵션을 함수로 모듈화할 수 있습니다. `ASSOCIATE`에 전달할 함수안에서 `ASSOCIATE_MODULE`을 실행하면 됩니다.
 
 ```javascript
 Posts.rights = () => ASSOCIATE_MODULE `
