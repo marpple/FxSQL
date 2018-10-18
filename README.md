@@ -285,6 +285,7 @@ await ASSOCIATE `
 /*
 * books
 *  - id
+*  - title
 *
 * authors
 *  - id
@@ -307,7 +308,7 @@ const authors = await ASSOCIATE `
     x books ${{ xtable: 'books_authors' }}
 `;
 
-authors[0]._.books[0].name;
+authors[0]._.books[0].title;
 ```
 
 ### Option

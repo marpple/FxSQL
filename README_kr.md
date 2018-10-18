@@ -283,6 +283,7 @@ await ASSOCIATE `
 /*
 * books
 *  - id
+*  - title
 *
 * authors
 *  - id
@@ -305,7 +306,7 @@ const authors = await ASSOCIATE `
     x books ${{ xtable: 'books_authors' }}
 `;
 
-authors[0]._.books[0].name; // 책 이름
+authors[0]._.books[0].title; // 책 이름
 ```
 
 ### 옵션
@@ -424,6 +425,19 @@ const posts = await ASSOCIATE `
 
 위와 같이 옵션을 통해 매칭시켜줄 수 있지만, 데이터베이스 VIEW를 이용해 매칭하면 훨씬 간결한 코드를 유지할 수 있습니다.
 
+### ROW_NUMBER + PARTITION (PostgreSQL만 지원)
+
+`row_number` 옵션을 통해 각각의 post 마다 최대 4개의 comments만 가져오도록 설정할 수 있습니다. 내부적으로 `ROW_NUMBER`와 `PARTITION`을 사용합니다.
+
+```javascript
+ASSOCIATE `
+  posts ${SQL `WHERE is_hidden = false ORDER BY id DESC LIMIT ${10}`}
+    < comments ${{
+      row_number: [4, SQL `id DESC`]
+    }}
+`
+```
+
 ### Hook
 
 `hook`을 이용하여 가상 컬럼을 추가하거나 정렬이나 필터링을 할 수 있습니다. 자신의 안쪽 데이터들이 모두 불려진 후 실행되어 활용하기 좋습니다.
@@ -443,6 +457,52 @@ const users = await ASSOCIATE `
 users[0]._popular; // true
 users[0]._.posts[0]._is_best; // true
 users[0]._.posts[1]._is_best; // false
+```
+
+### ASSOCIATE_MODULE
+
+`ASSOCIATE`에 재사용할 옵션을 모듈화할 수 있습니다. 모듈은 `ASSOCIATE_MODULE`을 실행하는 함수입니다.
+
+```javascript
+Posts.rights = () => ASSOCIATE_MODULE `
+  - user
+    < comments ${{
+      row_number: [4, SQL `id DESC`]
+    }}
+     - user
+     p < likes
+      - user
+    p < likes
+      - user
+    x tags
+`;
+
+ASSOCIATE `
+  posts ${SQL `WHERE is_hidden = false ORDER BY id DESC LIMIT ${10}`}
+    ${Posts.rights}
+`;
+```
+
+커링을 이용하면 외부의 컨텍스트를 전달할 수 있습니다.
+
+```javascript
+Posts.rights = (limit = 4) => () => ASSOCIATE_MODULE `
+  - user
+    < comments ${{
+      row_number: [limit, SQL `id DESC`]
+    }}
+     - user
+     p < likes
+      - user
+    p < likes
+      - user
+    x tags
+`;
+
+ASSOCIATE `
+  posts ${SQL `WHERE is_hidden = false ORDER BY id DESC LIMIT ${10}`}
+    ${Posts.rights(6)}
+`;
 ```
 
 ## Transaction
