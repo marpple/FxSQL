@@ -466,7 +466,7 @@ users[0]._.posts[1]._is_best; // false
 `ASSOCIATE`에서 재사용할 옵션을 함수로 모듈화할 수 있습니다. `ASSOCIATE`에 전달할 함수안에서 `ASSOCIATE_MODULE`을 실행하면 됩니다.
 
 ```javascript
-Posts.rights = () => ASSOCIATE_MODULE `
+Post.rights = () => ASSOCIATE_MODULE `
   - user
     < comments ${{
       row_number: [4, SQL `id DESC`]
@@ -481,14 +481,14 @@ Posts.rights = () => ASSOCIATE_MODULE `
 
 ASSOCIATE `
   posts ${SQL `WHERE is_hidden = false ORDER BY id DESC LIMIT ${10}`}
-    ${Posts.rights}
+    ${Post.rights}
 `;
 ```
 
 커링을 이용하면 외부의 컨텍스트를 전달할 수 있습니다.
 
 ```javascript
-Posts.rights = (limit = 4) => () => ASSOCIATE_MODULE `
+Post.rights = (limit = 4) => () => ASSOCIATE_MODULE `
   - user
     < comments ${{
       row_number: [limit, SQL `id DESC`]
@@ -503,7 +503,7 @@ Posts.rights = (limit = 4) => () => ASSOCIATE_MODULE `
 
 ASSOCIATE `
   posts ${SQL `WHERE is_hidden = false ORDER BY id DESC LIMIT ${10}`}
-    ${Posts.rights(6)}
+    ${Post.rights(6)}
 `;
 ```
 

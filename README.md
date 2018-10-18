@@ -469,7 +469,7 @@ users[0]._.posts[1]._is_best; // false
 `ASSOCIATE` allows you to modularize options for reuse. `ASSOCIATE_MODULE` in the function to be passed to` ASSOCIATE`.
 
 ```javascript
-Posts.rights = () => ASSOCIATE_MODULE `
+Post.rights = () => ASSOCIATE_MODULE `
   - user
     < comments ${{
       row_number: [4, SQL `id DESC`]
@@ -484,14 +484,14 @@ Posts.rights = () => ASSOCIATE_MODULE `
 
 ASSOCIATE `
   posts ${SQL `WHERE is_hidden = false ORDER BY id DESC LIMIT ${10}`}
-    ${Posts.rights}
+    ${Post.rights}
 `;
 ```
 
 Use currying to pass arguments.
 
 ```javascript
-Posts.rights = (limit = 4) => () => ASSOCIATE_MODULE `
+Post.rights = (limit = 4) => () => ASSOCIATE_MODULE `
   - user
     < comments ${{
       row_number: [limit, SQL `id DESC`]
@@ -506,7 +506,7 @@ Posts.rights = (limit = 4) => () => ASSOCIATE_MODULE `
 
 ASSOCIATE `
   posts ${SQL `WHERE is_hidden = false ORDER BY id DESC LIMIT ${10}`}
-    ${Posts.rights(6)}
+    ${Post.rights(6)}
 `;
 ```
 
