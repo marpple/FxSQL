@@ -274,12 +274,14 @@ function BASE({
 
   function IN(key, values) {
     return tag(function() {
+      if (!values || !values.length) return { text: `1=??`, values: [0]};
       return BASE_IN(key, 'IN', values);
     });
   }
 
   function NOT_IN(key, values) {
     return tag(function() {
+      if (!values || !values.length) return { text: `1=??`, values: [0]};
       return BASE_IN(key, 'NOT IN', values);
     });
   }
