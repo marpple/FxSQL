@@ -1,6 +1,6 @@
 {
   "name": "mql2",
-  "version": "0.1.17",
+  "version": "0.1.18",
   "description": "query builder",
   "main": "index.js",
   "scripts": {
