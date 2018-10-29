@@ -130,9 +130,6 @@ function BASE({
 
   function ready_sqls(strs, tails) {
     const [strs2, tails2] = import_module(strs, tails);
-    console.log(strs2);
-    console.log(tails2);
-
     const options = strs2
       .map(s => s
         .replace(/\s*\n/, '')
