@@ -85,6 +85,8 @@ function BASE({
   const dq = str => ('' + str).split('.').map(s => s == '*' ? s : escape_dq(s)).join('.');
 
   function ASSOCIATE_MODULE(strs, ...tails) {
+    strs = strs.slice();
+    strs.push(strs.pop() + '\n');
     var [strs2, tails2] = import_module(strs, tails);
 
     const splited = flatten(strs.map(str => str.split('\n')))
@@ -128,6 +130,8 @@ function BASE({
 
   function ready_sqls(strs, tails) {
     const [strs2, tails2] = import_module(strs, tails);
+    console.log(strs2);
+    console.log(tails2);
 
     const options = strs2
       .map(s => s
