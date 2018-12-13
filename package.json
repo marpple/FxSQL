@@ -1,6 +1,6 @@
 {
   "name": "mql2",
-  "version": "0.1.20",
+  "version": "1.0.0",
   "description": "query builder",
   "main": "index.js",
   "scripts": {
@@ -36,7 +36,7 @@
   "dependencies": {
     "dumper.js": "^1.1.1",
     "esm": "^3.0.80",
-    "fxjs2": "0.0.4",
+    "fxjs2": "0.0.17",
     "mysql": "^2.16.0",
     "pg": "^7.4.3",
     "pluralize": "^7.0.0"

@@ -1,7 +1,12 @@
 import {
-  is_string, is_function, flatten, flatten as cat, reduce, tap, go, pipe,
-  map, filter, reject, pluck, uniq, each, index_by, group_by, uniqueBy, object, curry
+  is_string, is_function,
+  deep_flat,
+  go, pipe, tap,
+  map, filter, reduce, reject,
+  pluck, uniq, each, index_by, group_by, unique_by, object, curry, min_by,
+  C
 } from 'fxjs2';
+
 import pg from 'pg';
 import mysql from 'mysql';
 import { plural, singular } from 'pluralize';
@@ -25,10 +30,7 @@ const mix = (arr1, arr2) => arr1.reduce((res, item, i) => {
   return res;
 }, []);
 
-const minBy = (f, arr) => arr.reduce((a, b) => f(a) <= f(b) ? a : b);
-
-const cmap = curry((f, arr) => Promise.all(arr.map(f)));
-const uniq_index_by = curry((f, coll) => index_by(f, uniqueBy(f, coll)));
+const uniq_index_by = curry((f, coll) => index_by(f, unique_by(f, coll)));
 
 const first = a => a && a[0];
 const last = a => a && a[a.length - 1];
@@ -89,11 +91,11 @@ function BASE({
     strs.push(strs.pop() + '\n');
     var [strs2, tails2] = import_module(strs, tails);
 
-    const splited = flatten(strs.map(str => str.split('\n')))
+    const splited = deep_flat(strs.map(str => str.split('\n')))
       .filter(str => str.match(/^\s*/)[0])
       .filter(str => str.trim());
 
-    const min = minBy(str => str.match(/^\s*/)[0].length, splited);
+    const min = min_by(str => str.match(/^\s*/)[0].length, splited);
     const a = '\n' + min.match(/^\s*/)[0];
 
     return [strs2.map(str => str.split(a).join('\n')), tails2];
@@ -114,7 +116,7 @@ function BASE({
     });
 
     return [
-      flatten(strs2).filter(str => str.trim()).reduce((strs, str, i) => {
+      deep_flat(strs2).filter(str => str.trim()).reduce((strs, str, i) => {
         if (i == 0) return strs.push(str), strs;
         const splited = last(strs).split('\n');
         if (!last(splited).trim()) {
@@ -125,7 +127,7 @@ function BASE({
         }
         return strs;
       }, []),
-      flatten(tails2)];
+      deep_flat(tails2)];
   }
 
   function ready_sqls(strs, tails) {
@@ -179,10 +181,10 @@ function BASE({
       if (query.text) res.text += (' ' + query.text);
       if (query.values) res.values.push(...query.values);
       return res;
-    }, queries, {
+    }, {
       text: '',
       values: []
-    });
+    }, queries);
     query.text = query.text.replace(/\n/g, ' ').replace(/\s\s*/g, ' ').trim();
     return query;
   }
@@ -194,7 +196,7 @@ function BASE({
       const columns = go(
         values,
         map(Object.keys),
-        flatten,
+        deep_flat,
         uniq);
 
       const DEFAULTS = go(
@@ -211,7 +213,7 @@ function BASE({
           values
             .map(v => v.map(v => v == SymbolDefault ? 'DEFAULT' : to_q()).join(', '))
             .join('), (')})`,
-        values: flatten(values.map(v => v.filter(v => v != SymbolDefault)))
+        values: deep_flat(values.map(v => v.filter(v => v != SymbolDefault)))
       }
     });
   }
@@ -269,7 +271,7 @@ function BASE({
       text: `${Array.isArray(key) ? `(${keys_text})` : keys_text} ${operator} (${values.map(
         Array.isArray(key) ? v => `(${v.map(to_q).join(', ')})` : to_q
       ).join(', ')})`,
-      values: cat(values)
+      values: deep_flat(values)
     };
   }
 
@@ -314,7 +316,7 @@ function BASE({
     return async function(strs, ...tails) {
       return go(
         ready_sqls(strs, tails),
-        cat,
+        deep_flat,
         filter(t => t.as),
         each(option => {
           option.column = option.column || '*';
@@ -360,7 +362,7 @@ function BASE({
           return go(
             [lefts, me],
             function recur([lefts, option]) {
-              return lefts.length && option.rels.length && go(option.rels, cmap(async function(me) {
+              return lefts.length && option.rels.length && go(option.rels, C.map(async function(me) {
                 const query = me.query();
                 if (query && query.text) query.text = query.text.replace(/^\s*WHERE/i, 'AND');
 
