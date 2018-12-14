@@ -6,7 +6,7 @@
  - Tagged template literal
  - No models.
  - Only need functions and javascript data types.
- - Promises
+ - Promise.
  - No cost for converting to JSON.
  - More freedom in using SQL syntax.
  - Preventing SQL-injection attacks.
