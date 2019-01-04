@@ -45,6 +45,7 @@ const tag = f => typeof f == 'function' ?
 
 function BASE({
   create_pool,
+  end_pool,
   query_fn,
   get_connection = pool => pool.connect(),
   BEGIN = client => client.query('BEGIN'),
@@ -430,8 +431,12 @@ function BASE({
         excute_query);
     }
 
-    async function QUERY(texts, ...values) {
+    function QUERY(texts, ...values) {
       return base_query(pool_query, texts, values);
+    }
+
+    function END() {
+      return end_pool(pool);
     }
 
     const QUERY1 = pipe(QUERY, first),
@@ -455,6 +460,7 @@ function BASE({
       ASSOCIATE,
       ASSOCIATE1,
       ASSOCIATE_MODULE,
+      END,
       LOAD_LJOIN: use_ljoin ? LOAD_LJOIN : null,
       async TRANSACTION() {
         try {
@@ -493,12 +499,16 @@ export const
   PostgreSQL = BASE({
     create_pool: connection_info => new pg.Pool(connection_info),
 
+    end_pool: pool => pool.end(),
+
     query_fn: pool => pipe(pool.query.bind(pool), res => res.rows),
 
     use_ljoin: true
   }),
   MySQL = BASE({
     create_pool: connection_info => mysql.createPool(connection_info),
+
+    end_pool: pool => new Promise((resolve, reject) => pool.end(err => err ? reject(err) : resolve)),
 
     query_fn: pool => ({text, values}) =>
       new Promise((resolve, reject) =>
