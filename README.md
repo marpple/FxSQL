@@ -18,9 +18,10 @@
 
 ## Overview
   - [Installation](#installation)
-  - [Connect](#connect)
+  - [Connect (pool)](#connect-pool)
     - [PostgreSQL](#postgresql)
     - [MySQL](#mysql)
+  - [Closing all the connections in a pool](#closing-all-the-connections-in-a-pool)
   - [Simple query](#simple-query)
   - [Subquery, Join](#subquery-Join)
   - [Ready to be used](#ready-to-be-used)
