@@ -49,7 +49,7 @@
 npm i mql2
 ```
 
-## Connect
+## Connect (pool)
 
 ### PostgreSQL
 
@@ -85,6 +85,14 @@ const POOL = CONNECT({
 
 MQL is built on node-postgres. The parameter of CONNECT function is the same as the MySQL’. You can read the detail of [connection pool](https://github.com/mysqljs/mysql#pool-options) or [connecting to DB](https://github.com/mysqljs/mysql#connection-options) on [MySQL's site](https://github.com/mysqljs/mysql).
 
+## Closing all the connections in a pool
+
+### PostgreSQL, MySQL
+
+```
+POOL.END(); // Promise
+```
+
 ## Simple query
 
 ```javascript
@@ -117,7 +125,6 @@ QUERY `
 `;
 ```
 
-
 QUERY achieved from CONNECT uses a connection pool.
 
 ## Ready to be used
@@ -129,7 +136,8 @@ const {
   QUERY,
   ASSOCIATE,
   LJOIN,
-  TRANSACTION
+  TRANSACTION,
+  END
 } = POOL;
 ```
 

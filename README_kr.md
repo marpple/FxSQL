@@ -47,7 +47,7 @@
 npm i mql2
 ```
 
-## 연결
+## 연결 (Pool)
 
 ### PostgreSQL
 
@@ -82,6 +82,14 @@ const POOL = CONNECT({
 ### MySQL Connection 옵션
 
 MQL은 내부적으로 mysql를 사용합니다. `CONNECT` 함수에 사용되는 옵션은 mysql과 동일합니다. [디비 연결](https://github.com/mysqljs/mysql#connection-options)이나 [커넥션 풀](https://github.com/mysqljs/mysql#pool-options)과 관련된 자세한 옵션은 [mysql](https://github.com/mysqljs/mysql) 사이트에서 확인할 수 있습니다.
+
+## 연결 해제 (pool)
+
+### PostgreSQL, MySQL
+
+```
+POOL.END(); // Promise
+```
 
 ## 간단한 쿼리
 
@@ -127,7 +135,8 @@ const {
   QUERY,
   ASSOCIATE,
   LJOIN,
-  TRANSACTION
+  TRANSACTION,
+  END
 } = POOL;
 ```
 
