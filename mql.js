@@ -37,8 +37,8 @@ const first = a => a && a[0];
 const last = a => a && a[a.length - 1];
 
 const is_plain_object = obj => !!obj && typeof obj == 'object' && obj.constructor == Object;
-const is_column = f => f && f[SymbolColumn];
-const is_tag = f => f && f[SymbolTag];
+const is_column = f => !!(f && f[SymbolColumn]);
+const is_tag = f => !!(f && f[SymbolTag]);
 const is_injection = query => query == SymbolInjection;
 
 const tag = f => typeof f == 'function' ?
@@ -75,9 +75,9 @@ function BASE({
       is_column(me.column) ?
         COLUMN(...go(
           me.column.originals.concat(pluck('left_key', me.rels)),
-          map(c => me.as + '.' + c),
+          map(c => is_string(c) ? me.as + '.' + c : c),
           uniq)) :
-        tag(SymbolColumn);
+        tag(SymbolInjection);
 
   const columnize = v =>
     v == '*' ?
@@ -222,17 +222,13 @@ function BASE({
 
   function COLUMN(...originals) {
     return Object.assign(tag(function() {
-      return {
-        text: originals
-          .map(v =>
-            is_string(v) ?
-              columnize(v) :
-            Object
-              .entries(v)
-              .map(v => v.map(dq).join(' AS '))
-              .join(', '))
-          .join(', ')
-      };
+      let sqls = deep_flat(originals
+        .map(v =>
+          is_string(v) ? [{ text: columnize(v) }, { text: ', ' }] :
+            is_tag(v) ? [v(), { text: ', ' }] :
+              [{ text: Object.entries(v).map(v => v.map(dq).join(' AS ')).join(', ')}, { text: ', ' }]));
+      sqls.pop();
+      return merge_query(sqls);
     }), { [SymbolColumn]: true, originals: originals });
   }
 
