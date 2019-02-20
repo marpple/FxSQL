@@ -1,6 +1,7 @@
 import {
   is_string, is_function,
   deep_flat,
+  flat,
   go, pipe, tap,
   map, filter, reduce, reject,
   pluck, uniq, each, index_by, group_by, unique_by, object, curry, min_by,
@@ -198,7 +199,7 @@ function BASE({
       const columns = go(
         values,
         map(Object.keys),
-        deep_flat,
+        flat,
         uniq);
 
       const DEFAULTS = go(
@@ -215,14 +216,14 @@ function BASE({
           values
             .map(v => v.map(v => v == SymbolDefault ? 'DEFAULT' : to_q()).join(', '))
             .join('), (')})`,
-        values: deep_flat(values.map(v => v.filter(v => v != SymbolDefault)))
+        values: flat(values.map(v => v.filter(v => v != SymbolDefault)))
       }
     });
   }
 
   function COLUMN(...originals) {
     return Object.assign(tag(function() {
-      let sqls = deep_flat(originals
+      let sqls = flat(originals
         .map(v =>
           is_string(v) ? [{ text: columnize(v) }, { text: ', ' }] :
             is_tag(v) ? [v(), { text: ', ' }] :
