@@ -15,7 +15,8 @@ import { dump } from 'dumper.js';
 
 export const MQL_DEBUG = {
   DUMP: false,
-  LOG: false
+  LOG: false,
+  ERROR_WITH_SQL: false
 };
 
 const SymbolColumn = Symbol('COLUMN');
@@ -418,17 +419,22 @@ function BASE({
     const pool = create_pool(connection_info);
     const pool_query = query_fn(pool);
 
-    function base_query(excute_query, texts, values) {
-      return go(
-        _SQL(texts, values),
-        replace_q,
-        query => is_injection(query) ? Promise.reject('INJECTION ERROR') : query,
-        tap(function(query) {
-          if (MQL_DEBUG.DUMP) dump(query);
-          typeof MQL_DEBUG.LOG == 'function' ?
-            MQL_DEBUG.LOG(query) : (MQL_DEBUG.LOG && console.log(query));
-        }),
-        excute_query);
+    async function base_query(excute_query, texts, values) {
+      try {
+        var query = replace_q(_SQL(texts, values));
+        return await go(
+          is_injection(query) ? Promise.reject('INJECTION ERROR') : query,
+          tap(function(query) {
+            if (MQL_DEBUG.DUMP) dump(query);
+            typeof MQL_DEBUG.LOG == 'function' ?
+              MQL_DEBUG.LOG(query) : (MQL_DEBUG.LOG && console.log(query));
+          }),
+          excute_query);
+      } catch (e) {
+        MQL_DEBUG.ERROR_WITH_SQL &&
+          (e.stack = `\nMQL_DEBUG.ERROR_WITH_SQL:\n  text: ${query.text}\n  values: ${JSON.stringify(query.values)}\n${e.stack}`);
+        throw e;
+      }
     }
 
     function QUERY(texts, ...values) {
