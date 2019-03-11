@@ -402,7 +402,7 @@ function BASE({
                     left._[me.as] = folded[left[me.left_key]] || default_value();
                   }, lefts),
                   _ => recur([rights, me]),
-                  _ => me.hook && each(left => left._[me.as] = me.hook(left._[me.as]), lefts));
+                  _ => me.hook && each(left => go(me.hook(left._[me.as]), right => left._[me.as] = right), lefts));
               }));
             },
             _ => me.hook ? me.hook(lefts) : lefts
