@@ -365,13 +365,11 @@ ASSOCIATE `
 * */
 
 ASSOCIATE `
-  posts ${{
-    column: COLUMN('body', 'updated_at'),
-    query: SQL `WHERE is_hidden = false ORDER BY id DESC LIMIT ${10}`
-  }}
+  posts ${SQL `WHERE is_hidden = false ORDER BY id DESC LIMIT ${10}`}
     - user
     < comments ${{
-      column: COLUMN('body', 'updated_at')
+      column: COLUMN('body', 'updated_at'),
+      query: SQL `WHERE is_hidden = false ORDER BY id DESC`
     }}
      - user
      p < likes
