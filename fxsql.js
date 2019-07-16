@@ -14,7 +14,7 @@ import { plural, singular } from 'pluralize';
 import load_ljoin from './ljoin.js'
 import { dump } from 'dumper.js';
 
-export const MQL_DEBUG = {
+export const FxSQL_DEBUG = {
   DUMP: false,
   LOG: false,
   ERROR_WITH_SQL: false
@@ -422,14 +422,14 @@ function BASE({
         return await go(
           is_injection(query) ? Promise.reject('INJECTION ERROR') : query,
           tap(function(query) {
-            if (MQL_DEBUG.DUMP) dump(query);
-            typeof MQL_DEBUG.LOG == 'function' ?
-              MQL_DEBUG.LOG(query) : (MQL_DEBUG.LOG && console.log(query));
+            if (FxSQL_DEBUG.DUMP) dump(query);
+            typeof FxSQL_DEBUG.LOG == 'function' ?
+              FxSQL_DEBUG.LOG(query) : (FxSQL_DEBUG.LOG && console.log(query));
           }),
           excute_query);
       } catch (e) {
-        MQL_DEBUG.ERROR_WITH_SQL &&
-          (e.stack = `\nMQL_DEBUG.ERROR_WITH_SQL:\n  text: ${query.text}\n  values: ${JSON.stringify(query.values)}\n${e.stack}`);
+        FxSQL_DEBUG.ERROR_WITH_SQL &&
+          (e.stack = `\nFxSQL_DEBUG.ERROR_WITH_SQL:\n  text: ${query.text}\n  values: ${JSON.stringify(query.values)}\n${e.stack}`);
         throw e;
       }
     }
@@ -450,14 +450,14 @@ function BASE({
 
     async function LOAD_LJOIN(QUERY) {
       if (!ljoin) ljoin = await load_ljoin({
-        ready_sqls, add_column, tag, MQL_DEBUG,
+        ready_sqls, add_column, tag, FxSQL_DEBUG,
         connection_info, QUERY, VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL, SQLS
       });
       return ljoin(QUERY);
     }
 
     return {
-      VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL, SQLS, MQL_DEBUG,
+      VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL, SQLS, FxSQL_DEBUG,
       QUERY,
       QUERY1,
       ASSOCIATE,
@@ -491,7 +491,7 @@ function BASE({
     }
   }
 
-  return { CONNECT, VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL, SQLS, MQL_DEBUG }
+  return { CONNECT, VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL, SQLS, FxSQL_DEBUG }
 }
 
 const method_promise = curry((name, obj) =>

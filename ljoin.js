@@ -6,7 +6,7 @@ import {
 import { plural, singular } from 'pluralize';
 
 export default async function load_ljoin({
-  ready_sqls, add_column, tag, MQL_DEBUG,
+  ready_sqls, add_column, tag, FxSQL_DEBUG,
   connection_info, QUERY, VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL, SQLS
 }) {
   const cmap = curry((f, arr) => Promise.all(arr.map(f)));

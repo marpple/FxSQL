@@ -1,6 +1,6 @@
-# MQL - Node.js Functional SQL Query Builder & ORM
+# FxSQL - Node.js Functional SQL Query Builder & ORM
 
-[EN](https://github.com/marpple/MQL) | [KR](https://github.com/marpple/MQL/blob/master/README_kr.md)
+[EN](https://github.com/marpple/FxSQL) | [KR](https://github.com/marpple/FxSQL/blob/master/README_kr.md)
 
 ## Features
  - Tagged template literal
@@ -14,7 +14,6 @@
  - Simple transaction API.
  - No models for Associations.
  - Designed to work well with PostgreSQL, MySQL.
-
 
 ## Overview
   - [Installation](#installation)
@@ -47,7 +46,7 @@
 ## Installation
 
 ```
-npm i mql2
+npm i fxsql
 ```
 
 ## Connect (pool)
@@ -55,7 +54,7 @@ npm i mql2
 ### PostgreSQL
 
 ```javascript
-const { PostgreSQL } = require('mql2');
+const { PostgreSQL } = require('fxsql');
 const { CONNECT } = PostgreSQL;
 const POOL = CONNECT({
   host: 'localhost',
@@ -67,12 +66,12 @@ const POOL = CONNECT({
 
 ### PostgreSQL Connection option
 
-MQL is built on node-postgres. The parameter of CONNECT function is the same as node-postgres’. You can read the detail of [connection pool](https://node-postgres.com/api/pool) or [connecting to DB](https://node-postgres.com/features/connecting) on [node-postgres’ site](https://node-postgres.com/).
+FxSQL is built on node-postgres. The parameter of CONNECT function is the same as node-postgres’. You can read the detail of [connection pool](https://node-postgres.com/api/pool) or [connecting to DB](https://node-postgres.com/features/connecting) on [node-postgres’ site](https://node-postgres.com/).
 
 ### MySQL
 
 ```javascript
-const { MySQL } = require('mql2');
+const { MySQL } = require('fxsql');
 const { CONNECT } = MySQL;
 const POOL = CONNECT({
   host: 'localhost',
@@ -84,7 +83,7 @@ const POOL = CONNECT({
 
 ### MySQL Connection option
 
-MQL is built on node-postgres. The parameter of CONNECT function is the same as the MySQL’. You can read the detail of [connection pool](https://github.com/mysqljs/mysql#pool-options) or [connecting to DB](https://github.com/mysqljs/mysql#connection-options) on [MySQL's site](https://github.com/mysqljs/mysql).
+FxSQL is built on node-postgres. The parameter of CONNECT function is the same as the MySQL’. You can read the detail of [connection pool](https://github.com/mysqljs/mysql#pool-options) or [connecting to DB](https://github.com/mysqljs/mysql#connection-options) on [MySQL's site](https://github.com/mysqljs/mysql).
 
 ## Closing all the connections in a pool
 
@@ -133,7 +132,7 @@ QUERY achieved from CONNECT uses a connection pool.
 ```javascript
 const POOL = CONNECT();
 const {
-  VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL, MQL_DEBUG,
+  VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL, FxSQL_DEBUG,
   QUERY,
   ASSOCIATE,
   LJOIN,
@@ -523,7 +522,7 @@ ASSOCIATE `
 ## Transaction
 
 ```javascript
-const { PostgreSQL } = require('mql2');
+const { PostgreSQL } = require('fxsql');
 const { CONNECT } = PostgreSQL;
 const POOL = CONNECT({
   host: 'localhost',
@@ -549,7 +548,7 @@ await ROLLBACK();
 
 
 ```javascript
-MQL_DEBUG.LOG = true;
+FxSQL_DEBUG.LOG = true;
 QUERY `SELECT ${"hi~"} as ho`;
 
 // { text: 'SELECT $1 as ho', values: ['hi'] }

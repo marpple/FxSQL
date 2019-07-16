@@ -1,6 +1,6 @@
-# MQL - Node.js Functional SQL Query Builder & ORM
+# FxSQL - Node.js Functional SQL Query Builder & ORM
 
-[EN](https://github.com/marpple/MQL) | [KR](https://github.com/marpple/MQL/blob/master/README_kr.md)
+[EN](https://github.com/marpple/FxSQL) | [KR](https://github.com/marpple/FxSQL/blob/master/README_kr.md)
 
 ## 특징
  - 함수와 자바스크립트의 기본 값을 이용한 쿼리 생성
@@ -45,7 +45,7 @@
 ## 설치
 
 ```
-npm i mql2
+npm i fxsql
 ```
 
 ## 연결 (Pool)
@@ -53,7 +53,7 @@ npm i mql2
 ### PostgreSQL
 
 ```javascript
-const { PostgreSQL } = require('mql2');
+const { PostgreSQL } = require('fxsql');
 const { CONNECT } = PostgreSQL;
 const POOL = CONNECT({
   host: 'localhost',
@@ -65,12 +65,12 @@ const POOL = CONNECT({
 
 ### PostgreSQL Connection 옵션
 
-MQL은 내부적으로 node-postgres를 사용합니다. `CONNECT` 함수에 사용되는 옵션은 node-postgres와 동일합니다. [디비 연결](https://node-postgres.com/features/connecting)이나 [커넥션 풀](https://node-postgres.com/api/pool)과 관련된 자세한 옵션은 [node-postgres](https://node-postgres.com/) 사이트에서 확인할 수 있습니다.
+FxSQL은 내부적으로 node-postgres를 사용합니다. `CONNECT` 함수에 사용되는 옵션은 node-postgres와 동일합니다. [디비 연결](https://node-postgres.com/features/connecting)이나 [커넥션 풀](https://node-postgres.com/api/pool)과 관련된 자세한 옵션은 [node-postgres](https://node-postgres.com/) 사이트에서 확인할 수 있습니다.
 
 ### MySQL
 
 ```javascript
-const { MySQL } = require('mql2');
+const { MySQL } = require('fxsql');
 const { CONNECT } = MySQL;
 const POOL = CONNECT({
   host: 'localhost',
@@ -82,7 +82,7 @@ const POOL = CONNECT({
 
 ### MySQL Connection 옵션
 
-MQL은 내부적으로 mysql를 사용합니다. `CONNECT` 함수에 사용되는 옵션은 mysql과 동일합니다. [디비 연결](https://github.com/mysqljs/mysql#connection-options)이나 [커넥션 풀](https://github.com/mysqljs/mysql#pool-options)과 관련된 자세한 옵션은 [mysql](https://github.com/mysqljs/mysql) 사이트에서 확인할 수 있습니다.
+FxSQL은 내부적으로 mysql를 사용합니다. `CONNECT` 함수에 사용되는 옵션은 mysql과 동일합니다. [디비 연결](https://github.com/mysqljs/mysql#connection-options)이나 [커넥션 풀](https://github.com/mysqljs/mysql#pool-options)과 관련된 자세한 옵션은 [mysql](https://github.com/mysqljs/mysql) 사이트에서 확인할 수 있습니다.
 
 ## 연결 해제 (pool)
 
@@ -132,7 +132,7 @@ QUERY `
 ```javascript
 const POOL = CONNECT();
 const {
-  VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL, MQL_DEBUG,
+  VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL, FxSQL_DEBUG,
   QUERY,
   ASSOCIATE,
   LJOIN,
@@ -521,7 +521,7 @@ ASSOCIATE `
 ## Transaction
 
 ```javascript
-const { PostgreSQL } = require('mql2');
+const { PostgreSQL } = require('fxsql');
 const { CONNECT } = PostgreSQL;
 const POOL = CONNECT({
   host: 'localhost',
@@ -546,10 +546,10 @@ await ROLLBACK();
 
 ## DEBUG
 
-`MQL_DEBUG.LOG`를 `true`로 설정한 후 `QUERY`를 실행하면 콘솔에 DB로 보낸 쿼리들을 출력합니다.
+`FxSQL_DEBUG.LOG`를 `true`로 설정한 후 `QUERY`를 실행하면 콘솔에 DB로 보낸 쿼리들을 출력합니다.
 
 ```javascript
-MQL_DEBUG.LOG = true;
+FxSQL_DEBUG.LOG = true;
 QUERY `SELECT ${"hi~"} as ho`;
 
 // { text: 'SELECT $1 as ho', values: ['hi'] }

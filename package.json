@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/marpple/MQL.git"
+    "url": "git+https://github.com/marpple/FxSQL.git"
   },
   "keywords": [
     "functional",
@@ -21,7 +21,7 @@
     "postgresql"
   ],
   "files": [
-    "mql.js",
+    "fxsql.js",
     "ljoin.js",
     "index.js",
     "LICENSE",
@@ -30,9 +30,9 @@
   "author": "marpple",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/marpple/MQL/issues"
+    "url": "https://github.com/marpple/FxSQL/issues"
   },
-  "homepage": "https://github.com/marpple/MQL",
+  "homepage": "https://github.com/marpple/FxSQL",
   "dependencies": {
     "dumper.js": "^1.1.1",
     "esm": "^3.0.80",
