@@ -177,11 +177,11 @@ function BASE({
       return options;
   }
 
-  function merge_query(queries) {
+  function merge_query(queries, sep = ' ') {
     if (queries.find(is_injection)) return SymbolInjection;
     var query = reduce((res, query) => {
       if (!query) return res;
-      if (query.text) res.text += (' ' + query.text);
+      if (query.text) res.text += (sep + query.text);
       if (query.values) res.values.push(...query.values);
       return res;
     }, {
@@ -229,7 +229,7 @@ function BASE({
             is_tag(v) ? [v(), { text: ', ' }] :
               [{ text: Object.entries(v).map(v => v.map(dq).join(' AS ')).join(', ')}, { text: ', ' }]));
       sqls.pop();
-      return merge_query(sqls);
+      return merge_query(sqls, '');
     }), { [SymbolColumn]: true, originals: originals });
   }
 
