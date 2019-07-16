@@ -63,7 +63,7 @@ describe('PostgreSQL', function() {
 
     it('COLUMN', () => {
       var query = COLUMN('id', 'bb as cc', 't2.name', 't2.name as name2', { a: 'c' }, { 't3.a': 'd' })();
-      expect(query.values).to.eql();
+      expect(query.values).to.eql([]);
       expect(query.text).to.eql(
         '"id", "bb" AS "cc", "t2"."name", "t2"."name" AS "name2", "a" AS "c", "t3"."a" AS "d"');
     });
