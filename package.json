@@ -3,6 +3,7 @@
   "version": "1.0.6",
   "description": "query builder",
   "main": "index.js",
+  "module": "fxsql.js",
   "scripts": {
     "test": "mocha -R spec test/**/*.js"
   },
