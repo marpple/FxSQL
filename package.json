@@ -1,5 +1,5 @@
 {
-  "name": "mql2",
+  "name": "fxsql",
   "version": "1.0.6",
   "description": "query builder",
   "main": "index.js",
