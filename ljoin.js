@@ -3,7 +3,8 @@ import {
   map, filter, reject, pluck, uniq, each, index_by, group_by, last, object, curry
 } from 'fxjs2';
 
-import { plural, singular } from 'pluralize';
+import pluralize from 'pluralize';
+const { singular } = pluralize;
 
 export default async function load_ljoin({
   ready_sqls, add_column, tag, FxSQL_DEBUG,

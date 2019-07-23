@@ -10,9 +10,11 @@ import {
 
 import pg from 'pg';
 import mysql from 'mysql';
-import { plural, singular } from 'pluralize';
+import pluralize from 'pluralize';
 import load_ljoin from './ljoin.js'
-import { dump } from 'dumper.js';
+import dumper from 'dumper.js';
+const { dump } = dumper;
+const { plural, singular } = pluralize;
 
 export const FxSQL_DEBUG = {
   DUMP: false,

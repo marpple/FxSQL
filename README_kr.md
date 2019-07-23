@@ -53,7 +53,7 @@ npm i fxsql
 ### PostgreSQL
 
 ```javascript
-const { PostgreSQL } = require('fxsql');
+import { PostgreSQL } from "fxsql";
 const { CONNECT } = PostgreSQL;
 const POOL = CONNECT({
   host: 'localhost',
@@ -70,7 +70,7 @@ FxSQL은 내부적으로 node-postgres를 사용합니다. `CONNECT` 함수에 �
 ### MySQL
 
 ```javascript
-const { MySQL } = require('fxsql');
+import { MySQL } from "fxsql";
 const { CONNECT } = MySQL;
 const POOL = CONNECT({
   host: 'localhost',
@@ -521,7 +521,7 @@ ASSOCIATE `
 ## Transaction
 
 ```javascript
-const { PostgreSQL } = require('fxsql');
+import { PostgreSQL } from "fxsql";
 const { CONNECT } = PostgreSQL;
 const POOL = CONNECT({
   host: 'localhost',
