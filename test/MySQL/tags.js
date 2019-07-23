@@ -1,8 +1,6 @@
-const { expect } = require('chai');
-const {
-  MySQL: { VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL }
-} = require('../../index.js');
-
+import { expect } from 'chai';
+import { MySQL } from "../../index.js";
+const { VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL } = MySQL;
 
 describe('MySQL', function() {
   describe('VALUES', function () {

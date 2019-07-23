@@ -1,11 +1,11 @@
 {
   "name": "fxsql",
-  "version": "1.0.7",
+  "version": "1.1.0",
   "description": "query builder",
   "main": "index.js",
-  "module": "fxsql.js",
+  "type": "module",
   "scripts": {
-    "test": "mocha -R spec test/**/*.js"
+    "test": "mocha -R spec test/**/*.js --require esm"
   },
   "repository": {
     "type": "git",
@@ -22,7 +22,7 @@
     "postgresql"
   ],
   "files": [
-    "fxsql.js",
+    "index.js",
     "ljoin.js",
     "index.js",
     "LICENSE",
@@ -36,14 +36,14 @@
   "homepage": "https://github.com/marpple/FxSQL",
   "dependencies": {
     "dumper.js": "^1.1.1",
-    "esm": "^3.0.80",
-    "fxjs2": "^0.2.5",
+    "fxjs2": "^0.10.0",
     "mysql": "^2.16.0",
     "pg": "^7.4.3",
     "pluralize": "^7.0.0"
   },
   "devDependencies": {
     "chai": "^4.1.2",
+    "esm": "^3.2.25",
     "mocha": "^5.2.0"
   }
 }
