@@ -54,7 +54,7 @@ npm i fxsql
 ### PostgreSQL
 
 ```javascript
-import { PostgreSQL } from "fxsql";
+const { PostgreSQL } = require("fxsql");
 const { CONNECT } = PostgreSQL;
 const POOL = CONNECT({
   host: 'localhost',
@@ -71,7 +71,7 @@ FxSQL is built on node-postgres. The parameter of CONNECT function is the same a
 ### MySQL
 
 ```javascript
-import { MySQL } from "fxsql";
+const { MySQL } = require("fxsql");
 const { CONNECT } = MySQL;
 const POOL = CONNECT({
   host: 'localhost',
@@ -522,7 +522,7 @@ ASSOCIATE `
 ## Transaction
 
 ```javascript
-import { PostgreSQL } from "fxsql";
+const { PostgreSQL } = require("fxsql");
 const { CONNECT } = PostgreSQL;
 const POOL = CONNECT({
   host: 'localhost',
