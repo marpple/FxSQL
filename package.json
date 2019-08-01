@@ -4,6 +4,7 @@
   "description": "Functional query builder based on fxjs",
   "main": "index.js",
   "scripts": {
+    "transpile": "BABEL_ENV=cjs babel src --out-dir .",
     "test": "mocha -R spec test/**/*.js"
   },
   "repository": {
@@ -31,6 +32,7 @@
   },
   "homepage": "https://github.com/marpple/FxSQL",
   "dependencies": {
+    "core-js": "^3.1.4",
     "dumper.js": "^1.1.1",
     "fxjs": "^0.11.2",
     "mysql": "^2.16.0",
@@ -38,6 +40,9 @@
     "pluralize": "^7.0.0"
   },
   "devDependencies": {
+    "@babel/cli": "^7.5.5",
+    "@babel/core": "^7.5.5",
+    "@babel/preset-env": "^7.5.5",
     "chai": "^4.1.2",
     "mocha": "^5.2.0"
   }
