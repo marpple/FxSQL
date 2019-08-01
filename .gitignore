@@ -2,3 +2,5 @@ draft/
 node_modules/
 .idea/
 .DS_Store
+index.js
+ljoin.js
