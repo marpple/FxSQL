@@ -1,5 +1,5 @@
-import { expect } from 'chai';
-import { MySQL } from "../../index.js";
+const { expect } = require('chai');
+const { MySQL } = require ("../../index");
 const { VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL } = MySQL;
 
 describe('MySQL', function() {

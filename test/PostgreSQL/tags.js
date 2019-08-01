@@ -1,5 +1,5 @@
-import { expect } from 'chai';
-import { PostgreSQL } from "../../index.js";
+const { expect } = require('chai');
+const { PostgreSQL } = require("../../index");
 const { VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL } = PostgreSQL;
 
 describe('PostgreSQL', function() {

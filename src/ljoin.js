@@ -1,7 +1,7 @@
 import {
   is_string, is_function, flatten, flatten as cat, reduce, tap, go,
   map, filter, reject, pluck, uniq, each, index_by, group_by, last, object, curry
-} from 'fxjs2';
+} from 'fxjs';
 
 import pluralize from 'pluralize';
 const { singular } = pluralize;

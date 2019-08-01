@@ -6,7 +6,7 @@ import {
   map, filter, reduce, reject,
   pluck, uniq, each, index_by, group_by, unique_by, object, curry, min_by,
   C
-} from 'fxjs2';
+} from 'fxjs';
 
 import pg from 'pg';
 import mysql from 'mysql';
