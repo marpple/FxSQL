@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "transpile": "BABEL_ENV=cjs babel src --out-dir .",
-    "test": "mocha -R spec test/**/*.js"
+    "test": "mocha -R spec test/**/*.js --require esm"
   },
   "repository": {
     "type": "git",
@@ -44,6 +44,7 @@
     "@babel/core": "^7.5.5",
     "@babel/preset-env": "^7.5.5",
     "chai": "^4.1.2",
+    "esm": "^3.2.25",
     "mocha": "^5.2.0"
   }
 }

@@ -1,5 +1,5 @@
 const { expect } = require('chai');
-const { MySQL } = require ("../../index");
+const { MySQL } = require ("../../src/index");
 const { VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL } = MySQL;
 
 describe('MySQL', function() {

@@ -459,6 +459,7 @@ function BASE({
     }
 
     return {
+      POOL: pool,
       VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL, SQLS, FxSQL_DEBUG,
       QUERY,
       QUERY1,
