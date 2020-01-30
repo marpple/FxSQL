@@ -342,10 +342,11 @@ function BASE({
               me.xjoin = tag();
             } else if (me.rel_type == 'x') {
               me.left_key = me.left_key || 'id';
-              me.where_key = '_#_xtable_#_.' + (me.left_xkey || singular(left.table) + '_id');
-              var xtable = me.xtable || (left.table + '_' + me.table);
-              me.xjoin = SQL `INNER JOIN ${TB(xtable)} AS ${TB('_#_xtable_#_')} on ${EQ({
-                ['_#_xtable_#_.' + (me.xkey || singular(me.table) + '_id')]: COLUMN(me.as + '.' + (me.key || 'id'))
+              const xtable = me.xtable || (left.table + '_' + me.table);
+              const xtable_as = me.xtable_as || xtable;
+              me.where_key = `${xtable_as}.${me.left_xkey || singular(left.table) + '_id'}`;
+              me.xjoin = SQL `INNER JOIN ${TB(xtable)} AS ${TB(xtable_as)} ON ${EQ({
+                [`${xtable_as}.${me.xkey || singular(me.table) + '_id'}`]: COLUMN(me.as + '.' + (me.key || 'id'))
               })}`;
             }
             me.poly_type = me.is_poly ?
