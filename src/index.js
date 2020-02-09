@@ -80,7 +80,8 @@ function BASE({
           me.column.originals.concat(pluck('left_key', me.rels)),
           map(c => is_string(c) ? me.as + '.' + c : c),
           uniq)) :
-        tag(SymbolInjection);
+      is_tag(me.column) ?
+        CL(me.column) : tag(SymbolInjection);
 
   const columnize = v =>
     v == '*' ?
@@ -403,6 +404,7 @@ function BASE({
                   folded => each(function(left) {
                     left._ = left._ || {};
                     left._[me.as] = folded[left[me.left_key]] || default_value();
+                    if (me.rel_type == 'x') each(a => delete a[fold_key], left._[me.as]);
                   }, lefts),
                   _ => recur([rights, me]),
                   _ => me.hook && each(left => go(me.hook(left._[me.as]), right => left._[me.as] = right), lefts));
