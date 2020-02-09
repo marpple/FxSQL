@@ -515,7 +515,7 @@ export const
   MySQL = BASE({
     create_pool: connection_info => mysql.createPool(connection_info),
 
-    end_pool: pool => new Promise((resolve, reject) => pool.end(err => err ? reject(err) : resolve)),
+    end_pool: pool => new Promise((resolve, reject) => pool.end(err => err ? reject(err) : resolve())),
 
     query_fn: pool => ({text, values}) =>
       new Promise((resolve, reject) =>
