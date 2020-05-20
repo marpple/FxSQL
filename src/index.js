@@ -461,6 +461,9 @@ function BASE({
       return ljoin(QUERY);
     }
 
+    let baseTransactionQuery = function() {};
+    let transactionErrorHandler = function(err) { throw err; };
+
     return {
       POOL: pool,
       VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL, SQLS, FxSQL_DEBUG,
@@ -471,18 +474,33 @@ function BASE({
       ASSOCIATE_MODULE,
       END,
       LOAD_LJOIN: use_ljoin ? LOAD_LJOIN : null,
+      config: {
+        setBaseTransactionQuery(func) {
+          baseTransactionQuery = func;
+        },
+        setTransactionErrorHandler(func) {
+          transactionErrorHandler = func;
+        }
+      },
       async TRANSACTION() {
         try {
           const client = await get_connection(pool);
           const client_query = query_fn(client);
+          const querys = [];
           await BEGIN(client);
           function QUERY(texts, ...values) {
+            querys.push([texts.join('?'), values]);
             return base_query(client_query, texts, values);
           }
           const QUERY1 = pipe(QUERY, first),
           ASSOCIATE = baseAssociate(QUERY),
           ASSOCIATE1 = pipe(ASSOCIATE, first);
+          await baseTransactionQuery(QUERY, QUERY1);
+          client.on('error', err => {
+            transactionErrorHandler(err, client, querys);
+          });
           return {
+            client,
             VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL,
             QUERY,
             QUERY1,
