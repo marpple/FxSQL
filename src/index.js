@@ -421,9 +421,14 @@ function BASE({
     const pool = create_pool(connection_info);
     const pool_query = query_fn(pool);
 
-    async function base_query(excute_query, texts, values) {
+    async function base_query(excute_query, texts, values, transaction_querys) {
       try {
         var query = replace_q(_SQL(texts, values));
+        if (Array.isArray(transaction_querys)) transaction_querys.push({
+          text: query.text,
+          values: JSON.stringify(query.values),
+          stack: new Error().stack
+        });
         return await go(
           is_injection(query) ? Promise.reject('INJECTION ERROR') : query,
           tap(function(query) {
@@ -486,18 +491,17 @@ function BASE({
         try {
           const client = await get_connection(pool);
           const client_query = query_fn(client);
-          const querys = [];
+          const transaction_querys = [];
           await BEGIN(client);
           function QUERY(texts, ...values) {
-            querys.push([texts.join('?'), values]);
-            return base_query(client_query, texts, values);
+            return base_query(client_query, texts, values, transaction_querys);
           }
           const QUERY1 = pipe(QUERY, first),
           ASSOCIATE = baseAssociate(QUERY),
           ASSOCIATE1 = pipe(ASSOCIATE, first);
           await baseTransactionQuery(QUERY, QUERY1);
           client.on('error', err => {
-            transactionErrorHandler(err, client, querys);
+            transactionErrorHandler(err, client, transaction_querys);
           });
           return {
             client,
@@ -507,8 +511,16 @@ function BASE({
             ASSOCIATE,
             ASSOCIATE1,
             LJOIN: use_ljoin && ljoin ? await ljoin(QUERY) : null,
-            COMMIT: _ => COMMIT(client),
-            ROLLBACK: _ => ROLLBACK(client)
+            COMMIT: _ => {
+              const { stack } = new Error();
+              transaction_querys.push({ query: 'COMMIT', VALUES: [], stack });
+              return COMMIT(client);
+            },
+            ROLLBACK: _ => {
+              const { stack } = new Error();
+              transaction_querys.push({ query: 'ROLLBACK', VALUES: [], stack });
+              return ROLLBACK(client);
+            }
           }
         } catch (e) { throw e; }
       }
