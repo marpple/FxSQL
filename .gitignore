@@ -4,3 +4,4 @@ node_modules/
 .DS_Store
 index.js
 ljoin.js
+test/PostgreSQL/test.js
