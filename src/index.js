@@ -488,6 +488,7 @@ function BASE({
         }
       },
       async TRANSACTION() {
+        const stack = Error('Transaction start stacktrace');
         try {
           const client = await get_connection(pool);
           const client_query = query_fn(client);
@@ -501,7 +502,7 @@ function BASE({
           ASSOCIATE1 = pipe(ASSOCIATE, first);
           await baseTransactionQuery(QUERY, QUERY1);
           client.on('error', err => {
-            transactionErrorHandler(err, client, transaction_querys);
+            transactionErrorHandler(err, client, transaction_querys, stack);
           });
           return {
             client,
