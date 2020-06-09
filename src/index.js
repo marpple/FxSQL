@@ -101,7 +101,7 @@ function BASE({
       .filter(str => str.match(/^\s*/)[0])
       .filter(str => str.trim());
 
-    const min = min_by(str => str.match(/^\s*/)[0].length, splited);
+    const min = min_by(str => str.match(/^\s*/)[0].length, splited) || '';
     const a = '\n' + min.match(/^\s*/)[0];
 
     return [strs2.map(str => str.split(a).join('\n')), tails2];
