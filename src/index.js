@@ -322,6 +322,7 @@ function BASE({
         filter(t => t.as),
         each(option => {
           option.column = option.column || '*';
+          option.join = option.join || SQL``;
           option.query = option.query || tag();
           option.table = option.table || (option.rel_type == '-' ? plural(option.as) : option.as);
           option.rels = [];
@@ -384,7 +385,8 @@ function BASE({
                     SELECT
                       ${COLUMN(...colums)}, 
                       ROW_NUMBER() OVER (PARTITION BY ${CL(me.where_key)} ORDER BY ${me.row_number[1]}) as "--row_number--"
-                    FROM ${TB(me.table)} AS ${TB(me.as)} 
+                    FROM ${TB(me.table)} AS ${TB(me.as)}
+                    ${me.join} 
                     ${me.xjoin} 
                     WHERE ${IN(me.as +'.'+me.where_key, in_vals)} ${me.poly_type} ${tag(query)}
                   ) AS "--row_number_table--"
@@ -392,7 +394,8 @@ function BASE({
                   :
                   QUERY `
                   SELECT ${COLUMN(...colums)}
-                    FROM ${TB(me.table)} AS ${TB(me.as)} 
+                    FROM ${TB(me.table)} AS ${TB(me.as)}
+                    ${me.join} 
                     ${me.xjoin} 
                     WHERE ${IN(me.where_key, in_vals)} ${me.poly_type} ${tag(query)}`));
 
@@ -494,9 +497,9 @@ function BASE({
           const client_query = query_fn(client);
           const transaction_querys = [];
           await BEGIN(client);
-          function QUERY(texts, ...values) {
+          const QUERY = function QUERY(texts, ...values) {
             return base_query(client_query, texts, values, transaction_querys);
-          }
+          };
           const QUERY1 = pipe(QUERY, first),
           ASSOCIATE = baseAssociate(QUERY),
           ASSOCIATE1 = pipe(ASSOCIATE, first);
