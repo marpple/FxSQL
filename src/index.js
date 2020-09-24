@@ -437,7 +437,7 @@ function BASE({
           tap(function(query) {
             if (FxSQL_DEBUG.DUMP) dump(query);
             typeof FxSQL_DEBUG.LOG == 'function' ?
-              FxSQL_DEBUG.LOG(query) : (FxSQL_DEBUG.LOG && console.log(query));
+              FxSQL_DEBUG.LOG(query) : (FxSQL_DEBUG.LOG && console.log(query.text, '\n', query.values));
           }),
           excute_query);
       } catch (e) {
