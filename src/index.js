@@ -423,6 +423,13 @@ function BASE({
   function CONNECT(connection_info) {
     const pool = create_pool(connection_info);
     const pool_query = query_fn(pool);
+    const _on2_obj = {
+      error: function() {}
+    };
+
+    pool.queryError = (cb) => {
+      _on2_obj['error'] = cb;
+    };
 
     async function base_query(excute_query, texts, values, transaction_querys) {
       try {
@@ -443,6 +450,7 @@ function BASE({
       } catch (e) {
         FxSQL_DEBUG.ERROR_WITH_SQL &&
           (e.stack = `\nFxSQL_DEBUG.ERROR_WITH_SQL:\n  text: ${query.text}\n  values: ${JSON.stringify(query.values)}\n${e.stack}`);
+        _on2_obj.error(query);
         throw e;
       }
     }
