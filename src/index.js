@@ -432,7 +432,7 @@ function BASE({
     };
 
     async function base_query(excute_query, texts, values, transaction_querys) {
-      const __query_error_stack = new Error('error stack.');
+      const error_for_stack = new Error();
       try {
         var query = replace_q(_SQL(texts, values));
         if (Array.isArray(transaction_querys)) transaction_querys.push({
@@ -451,7 +451,8 @@ function BASE({
       } catch (e) {
         FxSQL_DEBUG.ERROR_WITH_SQL &&
           (e.stack = `\nFxSQL_DEBUG.ERROR_WITH_SQL:\n  text: ${query.text}\n  values: ${JSON.stringify(query.values)}\n${e.stack}`);
-        _on2_obj.error(query, __query_error_stack);
+        error_for_stack.message = e.message;
+        _on2_obj.error(query, error_for_stack);
         throw e;
       }
     }
