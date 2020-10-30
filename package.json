@@ -1,6 +1,6 @@
 {
   "name": "fxsql",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "description": "Functional query builder based on fxjs",
   "main": "index.js",
   "scripts": {
