@@ -397,7 +397,7 @@ function BASE({
                     FROM ${TB(me.table)} AS ${TB(me.as)}
                     ${me.join} 
                     ${me.xjoin} 
-                    WHERE ${IN(me.as+'.'+me.where_key, in_vals)} ${me.poly_type} ${tag(query)}`));
+                    WHERE ${IN(me.where_key, in_vals)} ${me.poly_type} ${tag(query)}`));
 
                 const [folder, default_value] = me.rel_type == '-' ? [uniq_index_by, () => ({})] : [group_by, () => []];
                 return go(
