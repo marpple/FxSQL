@@ -378,6 +378,16 @@ function BASE({
 
                 const in_vals = filter(a => a != null, pluck(me.left_key, lefts));
                 const is_row_num = me.row_number.length == 2;
+
+                const from_sql = SQL`
+                  FROM ${TB(me.table)} AS ${TB(me.as)}
+                  ${me.join} 
+                  ${me.xjoin} 
+                  WHERE 
+                    ${IN((me.rel_type == 'x' ? '' : me.as+'.') + me.where_key, in_vals)} 
+                    ${me.poly_type}
+                    ${tag(query)}`
+
                 const rights = (!in_vals.length ? [] : await (is_row_num ?
                   QUERY `
                   SELECT *
@@ -385,19 +395,11 @@ function BASE({
                     SELECT
                       ${COLUMN(...colums)}, 
                       ROW_NUMBER() OVER (PARTITION BY ${CL(me.where_key)} ORDER BY ${me.row_number[1]}) as "--row_number--"
-                    FROM ${TB(me.table)} AS ${TB(me.as)}
-                    ${me.join} 
-                    ${me.xjoin} 
-                    WHERE ${IN(me.as+'.'+me.where_key, in_vals)} ${me.poly_type} ${tag(query)}
+                    ${from_sql}
                   ) AS "--row_number_table--"
                   WHERE "--row_number_table--"."--row_number--"<=${me.row_number[0]}`
                   :
-                  QUERY `
-                  SELECT ${COLUMN(...colums)}
-                    FROM ${TB(me.table)} AS ${TB(me.as)}
-                    ${me.join} 
-                    ${me.xjoin} 
-                    WHERE ${IN(me.where_key, in_vals)} ${me.poly_type} ${tag(query)}`));
+                  QUERY `SELECT ${COLUMN(...colums)} ${from_sql}`));
 
                 const [folder, default_value] = me.rel_type == '-' ? [uniq_index_by, () => ({})] : [group_by, () => []];
                 return go(
