@@ -1,17 +1,13 @@
-import {
-  is_string, is_function, flatten, flatten as cat, reduce, tap, go,
-  map, filter, reject, pluck, uniq, each, index_by, group_by, last, object, curry
-} from 'fxjs';
+import { each, filter, flatten as cat, go, groupBy, isString, last, map, mapC, pluck, reject, uniq } from 'fxjs';
 
 import pluralize from 'pluralize';
+
 const { singular } = pluralize;
 
 export default async function load_ljoin({
-  ready_sqls, add_column, tag, FxSQL_DEBUG,
-  connection_info, QUERY, VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL, SQLS
+  ready_sqls, add_column, tag,
+  connection_info, QUERY, IN, EQ, COLUMN, CL, TB, SQL, SQLS
 }) {
-  const cmap = curry((f, arr) => Promise.all(arr.map(f)));
-
   const table_columns = {};
 
   const add_as_join = (me, as) =>
@@ -32,14 +28,14 @@ export default async function load_ljoin({
           WHERE 
             tableowner=${connection_info.user || process.env.PGUSER} 
         ) ORDER BY table_name;`,
-    group_by((v) => v.table_name),
+    groupBy((v) => v.table_name),
     map(v => pluck('column_name', v))),
     await go(QUERY `
       SELECT * 
       FROM INFORMATION_SCHEMA.view_column_usage
       WHERE view_catalog=${connection_info.database || process.env.PGDATABASE}
       ;`,
-    group_by((v) => v.view_name),
+    groupBy((v) => v.view_name),
     map(v => pluck('column_name', v)))
   );
 
@@ -177,7 +173,7 @@ export default async function load_ljoin({
 
             me.poly_type = me.is_poly ?
               SQL `AND ${EQ(
-                is_string(me.poly_type) ? { attached_type: me.poly_type || left.table } : me.poly_type
+                isString(me.poly_type) ? { attached_type: me.poly_type || left.table } : me.poly_type
               )}` : tag();
 
             cur.push(me);
@@ -196,13 +192,13 @@ export default async function load_ljoin({
           if (reject(r=>r, results).length) return ;
           return go(
             left.rels,
-            cmap(async function(me) {
+            mapC(async function(me) {
               const f_key_ids = uniq(filter((r) => !!r, pluck(me.left_key, results)));
               if (me.rel_type == '-' || !f_key_ids.length) return recur([me, cat(map(r => r._ ? r._[me.as] : null, results))]);
               return go(
                 (!me.left_join_over && me.left_joins.length ?
                   left_join_query : where_in_query)(me, SQL `WHERE ${IN(me.as + '.' + me.key, f_key_ids)}`, QUERY),
-                group_by((v) => v[me.key]),
+                groupBy((v) => v[me.key]),
                 function(groups) {
                   each(function(result) {
                     result._ = result._ || {};

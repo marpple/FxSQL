@@ -1,18 +1,34 @@
+import dumper from 'dumper.js';
 import {
-  is_string, is_function,
-  deep_flat,
+  curry,
+  deepFlat,
+  each,
+  filter,
   flat,
-  go, pipe, tap,
-  map, filter, reduce, reject,
-  pluck, uniq, each, index_by, group_by, unique_by, object, curry, min_by,
-  C
+  go,
+  groupBy,
+  indexBy,
+  isFunction,
+  isString,
+  map,
+  mapC,
+  minBy,
+  object,
+  pipe,
+  pluck,
+  reduce,
+  reject,
+  tap,
+  uniq,
+  uniqueBy
 } from 'fxjs';
+import mysql from 'mysql';
+
 
 import pg from 'pg';
-import mysql from 'mysql';
 import pluralize from 'pluralize';
 import load_ljoin from './ljoin.js'
-import dumper from 'dumper.js';
+
 const { dump } = dumper;
 const { plural, singular } = pluralize;
 
@@ -34,7 +50,7 @@ const mix = (arr1, arr2) => arr1.reduce((res, item, i) => {
   return res;
 }, []);
 
-const uniq_index_by = curry((f, coll) => index_by(f, unique_by(f, coll)));
+const uniq_index_by = curry((f, coll) => indexBy(f, uniqueBy(f, coll)));
 
 const first = a => a && a[0];
 const last = a => a && a[a.length - 1];
@@ -78,7 +94,7 @@ function BASE({
       is_column(me.column) ?
         COLUMN(...go(
           me.column.originals.concat(pluck('left_key', me.rels)),
-          map(c => is_string(c) ? me.as + '.' + c : c),
+          map(c => isString(c) ? me.as + '.' + c : c),
           uniq)) :
       is_tag(me.column) ?
         CL(me.column) : tag(SymbolInjection);
@@ -97,11 +113,11 @@ function BASE({
     strs.push(strs.pop() + '\n');
     var [strs2, tails2] = import_module(strs, tails);
 
-    const splited = deep_flat(strs.map(str => str.split('\n')))
+    const splited = deepFlat(strs.map(str => str.split('\n')))
       .filter(str => str.match(/^\s*/)[0])
       .filter(str => str.trim());
 
-    const min = min_by(str => str.match(/^\s*/)[0].length, splited) || '';
+    const min = minBy(str => str.match(/^\s*/)[0].length, splited) || '';
     const a = '\n' + min.match(/^\s*/)[0];
 
     return [strs2.map(str => str.split(a).join('\n')), tails2];
@@ -122,7 +138,7 @@ function BASE({
     });
 
     return [
-      deep_flat(strs2).filter(str => str.trim()).reduce((strs, str, i) => {
+      deepFlat(strs2).filter(str => str.trim()).reduce((strs, str, i) => {
         if (i == 0) return strs.push(str), strs;
         const splited = last(strs).split('\n');
         if (!last(splited).trim()) {
@@ -133,7 +149,7 @@ function BASE({
         }
         return strs;
       }, []),
-      deep_flat(tails2)];
+      deepFlat(tails2)];
   }
 
   function ready_sqls(strs, tails) {
@@ -228,7 +244,7 @@ function BASE({
     return Object.assign(tag(function() {
       let sqls = flat(originals
         .map(v =>
-          is_string(v) ? [{ text: columnize(v) }, { text: ', ' }] :
+          isString(v) ? [{ text: columnize(v) }, { text: ', ' }] :
             is_tag(v) ? [v(), { text: ', ' }] :
               [{ text: Object.entries(v).map(v => v.map(dq).join(' AS ')).join(', ')}, { text: ', ' }]));
       sqls.pop();
@@ -273,7 +289,7 @@ function BASE({
       text: `${Array.isArray(key) ? `(${keys_text})` : keys_text} ${operator} (${values.map(
         Array.isArray(key) ? v => `(${v.map(to_q).join(', ')})` : to_q
       ).join(', ')})`,
-      values: deep_flat(values)
+      values: deepFlat(values)
     };
   }
 
@@ -296,7 +312,7 @@ function BASE({
       mix(
         texts.map(text => ({ text })),
         values.map(value =>
-          is_tag(value) ? value() : is_function(value) ? SymbolInjection : { text: to_q(), values: [value] })
+          is_tag(value) ? value() : isFunction(value) ? SymbolInjection : { text: to_q(), values: [value] })
       ),
       merge_query);
   }
@@ -318,7 +334,7 @@ function BASE({
     return async function(strs, ...tails) {
       return go(
         ready_sqls(strs, tails),
-        deep_flat,
+        deepFlat,
         filter(t => t.as),
         each(option => {
           option.column = option.column || '*';
@@ -366,7 +382,7 @@ function BASE({
           return go(
             [lefts, me],
             function recur([lefts, option]) {
-              return lefts.length && option.rels.length && go(option.rels, C.map(async function(me) {
+              return lefts.length && option.rels.length && go(option.rels, mapC(async function(me) {
                 const query = me.query();
                 if (query && query.text) query.text = query.text.replace(/^\s*WHERE/i, 'AND');
 
@@ -401,7 +417,7 @@ function BASE({
                   :
                   QUERY `SELECT ${COLUMN(...colums)} ${from_sql}`));
 
-                const [folder, default_value] = me.rel_type == '-' ? [uniq_index_by, () => ({})] : [group_by, () => []];
+                const [folder, default_value] = me.rel_type == '-' ? [uniq_index_by, () => ({})] : [groupBy, () => []];
                 return go(
                   rights,
                   is_row_num ? map(r => delete r['--row_number--'] && r) : r => r,
