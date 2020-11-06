@@ -2,6 +2,8 @@ draft/
 node_modules/
 .idea/
 .DS_Store
+test/PostgreSQL/test.js
+cjs/
+mjs/
 index.js
 ljoin.js
-test/PostgreSQL/test.js
