@@ -24,7 +24,8 @@ import {
 } from 'fxjs';
 import mysql from 'mysql';
 
-import pg from 'pg';
+import Pool from "pg-pool";
+
 import pluralize from 'pluralize';
 import load_ljoin from './ljoin.js';
 
@@ -735,7 +736,7 @@ const method_promise = curry(
 );
 
 export const PostgreSQL = BASE({
-    create_pool: (connection_info) => new pg.Pool(connection_info),
+    create_pool: (connection_info) => new Pool(connection_info),
 
     end_pool: (pool) => pool.end(),
 
