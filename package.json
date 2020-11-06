@@ -44,7 +44,6 @@
     "@babel/core": "^7.12.3",
     "@babel/preset-env": "^7.12.1",
     "chai": "^4.2.0",
-    "esm": "^3.2.25",
     "mocha": "^8.2.1",
     "prettier": "^2.1.2"
   }
