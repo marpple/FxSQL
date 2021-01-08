@@ -5,5 +5,6 @@ node_modules/
 test/PostgreSQL/test.js
 cjs/
 mjs/
+es/
 index.js
 ljoin.js

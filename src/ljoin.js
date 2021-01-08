@@ -11,7 +11,7 @@ import {
   pluck,
   reject,
   uniq,
-} from 'fxjs';
+} from 'fxjs/es';
 
 import pluralize from 'pluralize';
 

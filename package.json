@@ -9,7 +9,7 @@
     "transpile:mjs": "BABEL_ENV=mjs babel src --out-dir ./mjs",
     "transpile:cjs": "BABEL_ENV=cjs babel src --out-dir ./cjs",
     "transpile": "npm run transpile:mjs && npm run transpile:cjs",
-    "build": "npm run transpile && node build_script.js",
+    "build": "npm run transpile && node scripts/transfrom_cjs_exports.js && mv src es",
     "deploy": "np --no-tests --no-publish",
     "test": "mocha -R spec test/**/*.js"
   },
@@ -47,11 +47,17 @@
     "./ljoin.js": {
       "import": "./mjs/ljoin.js",
       "require": "./ljoin.js"
-    }
+    },
+    "./es": "./es/index.js",
+    "./es/index": "./es/index.js",
+    "./es/index.js": "./es/index.js",
+    "./es/ljoin": "./es/ljoin.js",
+    "./es/ljoin.js": "./es/ljoin.js"
   },
   "files": [
     "mjs/",
     "cjs/",
+    "es/",
     "index.js",
     "ljoin.js"
   ],

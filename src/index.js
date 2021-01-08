@@ -21,7 +21,7 @@ import {
   tap,
   uniq,
   uniqueBy,
-} from 'fxjs';
+} from 'fxjs/es';
 import mysql from 'mysql';
 
 import Pool from "pg-pool";

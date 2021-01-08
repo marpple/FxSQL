@@ -8,6 +8,7 @@ module.exports = (api) => {
         corejs: 3,
       },
     ],
+    "./scripts/transform_import_fxjs.cjs"
   ];
   return {
     presets: [
