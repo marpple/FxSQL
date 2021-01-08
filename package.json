@@ -10,7 +10,7 @@
     "transpile:cjs": "BABEL_ENV=cjs babel src --out-dir ./cjs",
     "transpile": "npm run transpile:mjs && npm run transpile:cjs",
     "build": "npm run transpile && node build_script.js",
-    "deploy": "np --no-publish && npm run build && npm publish",
+    "deploy": "np --no-tests --no-publish",
     "test": "mocha -R spec test/**/*.js"
   },
   "repository": {
