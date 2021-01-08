@@ -1,6 +1,6 @@
 module.exports = (api) => {
   const BABEL_ENV = api.env();
-  const targets = { node: BABEL_ENV === "cjs" ? 6 : 12 };
+  const targets = { node: BABEL_ENV === "cjs" ? 8 : 12 };
   const plugins = [
     [
       "@babel/plugin-transform-runtime",
