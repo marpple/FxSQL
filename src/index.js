@@ -564,7 +564,7 @@ function BASE({
           transaction_querys.push({
             text: query.text,
             values: JSON.stringify(query.values),
-            stack: new Error().stack,
+            stack: FxSQL_DEBUG.LOG && new Error().stack,
           });
         return await go(
           is_injection(query) ? Promise.reject('INJECTION ERROR') : query,
